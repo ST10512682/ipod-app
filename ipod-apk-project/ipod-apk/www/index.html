@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>iPod</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;margin:0;background:#1a1a1c;display:flex;align-items:center;justify-content:center;font-family:Helvetica,Arial,sans-serif}
+.ipod{width:min(92vw,calc(92vh*0.6),360px);aspect-ratio:6/10;background:linear-gradient(160deg,#f4f4f2,#cfcfcc);border-radius:7% / 4.2%;padding:6%;display:flex;flex-direction:column;gap:6%;box-shadow:0 10px 40px #000a,inset 0 0 0 2px #fff8}
+.screen{flex:0 0 40%;background:#111;border-radius:3%;padding:2.5%;box-shadow:inset 0 0 0 2px #888}
+.lcd{height:100%;background:#fff;border-radius:2px;display:flex;flex-direction:column;overflow:hidden;font-size:clamp(11px,3.6vw,15px);color:#111}
+.bar{background:linear-gradient(#e8eef6,#a9b8cc);padding:3px 8px;font-weight:700;text-align:center;border-bottom:1px solid #7a8aa0;font-size:.9em}
+.list{flex:1;overflow:hidden}
+.row{padding:4px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;justify-content:space-between}
+.row.sel{background:linear-gradient(#5aa0ee,#1f6fd0);color:#fff}
+.np{flex:1;padding:8px;display:flex;flex-direction:column;justify-content:center;gap:6px;text-align:center}
+.np b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog{height:8px;background:#ddd;border:1px solid #888;border-radius:4px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(#6cb0f5,#1f6fd0)}
+.times{display:flex;justify-content:space-between;font-size:.8em;color:#444}
+.wheelwrap{flex:1;display:flex;align-items:center;justify-content:center}
+.wheel{position:relative;height:100%;aspect-ratio:1;max-width:100%;border-radius:50%;background:#e9e9e7;box-shadow:inset 0 0 0 1px #bbb,0 1px 3px #0003;touch-action:none}
+.wheel span{position:absolute;color:#777;font-weight:700;font-size:clamp(11px,3.4vw,15px);pointer-events:none}
+.t{top:9%;left:50%;transform:translateX(-50%)}.l{left:10%;top:50%;transform:translateY(-50%)}.r{right:10%;top:50%;transform:translateY(-50%)}.b{bottom:9%;left:50%;transform:translateX(-50%)}
+.c{position:absolute;left:33%;top:33%;width:34%;height:34%;border-radius:50%;background:linear-gradient(#fafaf8,#d8d8d4);box-shadow:inset 0 0 0 1px #bbb}
+.zone{position:absolute;width:30%;height:30%}
+</style></head><body>
+<div class="ipod">
+ <div class="screen"><div class="lcd"><div class="bar" id="title">iPod</div><div class="list" id="list"></div></div></div>
+ <div class="wheelwrap"><div class="wheel" id="wheel">
+  <span class="t">MENU</span><span class="l">&#9664;&#9664;</span><span class="r">&#9654;&#9654;</span><span class="b">&#9654;&#10074;&#10074;</span>
+  <div class="zone" style="top:2%;left:35%" data-k="menu"></div>
+  <div class="zone" style="top:35%;left:2%" data-k="prev"></div>
+  <div class="zone" style="top:35%;right:2%" data-k="next"></div>
+  <div class="zone" style="bottom:2%;left:35%" data-k="play"></div>
+  <div class="c" id="center"></div>
+ </div></div>
+</div>
+<input type="file" id="pick" accept="audio/*" multiple hidden>
+<audio id="au"></audio>
+<script>
+const $=id=>document.getElementById(id),au=$('au');
+let songs=[],cur=-1,stack=['main'],idx={main:0,songs:0},shuffle=false;
+const mainItems=()=>['Music','Now Playing','Shuffle Songs','Add Songs'];
+const name=f=>f.name.replace(/\.[^.]+$/,'');
+function items(){const s=stack[stack.length-1];
+ if(s==='main')return mainItems();
+ if(s==='songs')return songs.length?songs.map(x=>x.n):['No songs yet'];
+ return[];}
+function render(){const s=stack[stack.length-1],L=$('list');
+ if(s==='np'){$('title').textContent='Now Playing';
+  const t=songs[cur];L.innerHTML=t?`<div class="np"><b>${t.n}</b><div class="prog"><i id="pb"></i></div><div class="times"><span id="t1">0:00</span><span id="t2">-0:00</span></div></div>`:'<div class="np">Nothing playing</div>';tick();return;}
+ $('title').textContent=s==='main'?'iPod':'Songs';
+ const it=items(),i=idx[s]||0,vis=6,st=Math.max(0,Math.min(i-3,it.length-vis));
+ L.innerHTML=it.slice(st,st+vis).map((x,k)=>`<div class="row${st+k===i?' sel':''}"><span>${x}</span><span>${s==='main'||(songs[st+k]&&st+k===cur)?(s==='main'?'&#9656;':'&#9835;'):''}</span></div>`).join('');}
+function fmt(t){t=Math.max(0,t|0);return(t/60|0)+':'+String(t%60).padStart(2,'0')}
+function tick(){const b=$('pb');if(!b)return;const d=au.duration||0;b.style.width=d?au.currentTime/d*100+'%':'0';$('t1').textContent=fmt(au.currentTime);$('t2').textContent='-'+fmt(d-au.currentTime)}
+au.ontimeupdate=tick;au.onended=()=>next();
+function play(i){if(!songs[i])return;cur=i;au.src=songs[i].u;au.play();render()}
+function next(){if(!songs.length)return;play(shuffle?Math.random()*songs.length|0:(cur+1)%songs.length)}
+function prev(){if(!songs.length)return;if(au.currentTime>3){au.currentTime=0;return}play((cur-1+songs.length)%songs.length)}
+function toggle(){au.paused?au.play():au.pause()}
+function select(){const s=stack[stack.length-1];
+ if(s==='main'){const m=mainItems()[idx.main];
+  if(m==='Music'){stack.push('songs')}
+  else if(m==='Now Playing'){stack.push('np')}
+  else if(m==='Shuffle Songs'){shuffle=true;if(songs.length){play(Math.random()*songs.length|0);stack.push('np')}}
+  else $('pick').click();}
+ else if(s==='songs'&&songs.length){shuffle=false;play(idx.songs);stack.push('np')}
+ render()}
+function back(){if(stack.length>1)stack.pop();render()}
+function scroll(d){const s=stack[stack.length-1];if(s==='np'){au.volume=Math.max(0,Math.min(1,au.volume+d*0.05));return}
+ const n=items().length;idx[s]=Math.max(0,Math.min(n-1,(idx[s]||0)+d));render()}
+$('pick').onchange=e=>{for(const f of e.target.files)songs.push({n:name(f),u:URL.createObjectURL(f)});stack=['main','songs'];idx.songs=0;render()};
+// wheel
+const w=$('wheel');let last=null,acc=0,moved=false;
+const ang=e=>{const r=w.getBoundingClientRect();return Math.atan2(e.clientY-r.top-r.height/2,e.clientX-r.left-r.width/2)};
+w.onpointerdown=e=>{w.setPointerCapture(e.pointerId);last=ang(e);acc=0;moved=false;w._d=e.target.dataset.k||(e.target.id==='center'?'sel':null)};
+w.onpointermove=e=>{if(last===null)return;const a=ang(e);let d=a-last;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;last=a;acc+=d;
+ if(Math.abs(acc)>0.5){moved=true;scroll(acc>0?1:-1);acc=0;if(navigator.vibrate)navigator.vibrate(5)}};
+w.onpointerup=()=>{if(!moved){({menu:back,prev,next,play:toggle,sel:select})[w._d]?.()}last=null};
+render();
+</script></body></html>
