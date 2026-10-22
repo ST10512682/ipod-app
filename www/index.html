@@ -40,7 +40,13 @@ html,body{height:100%;margin:0;background:#1a1a1c;display:flex;align-items:cente
 <script>
 const $=id=>document.getElementById(id),au=$('au');
 let songs=[],cur=-1,stack=['main'],idx={main:0,songs:0},shuffle=false;
-const mainItems=()=>['Music','Now Playing','Shuffle Songs','Add Songs'];
+const mainItems=()=>['Music','Now Playing','Shuffle Songs','Add Songs','Clear Library'];
+const DB=new Promise((res,rej)=>{const r=indexedDB.open('ipod',1);r.onupgradeneeded=()=>r.result.createObjectStore('songs',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const store=async m=>(await DB).transaction('songs',m).objectStore('songs');
+const rq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+async function loadLib(){try{const a=await rq((await store('readonly')).getAll());songs=a.map(x=>({n:x.n,u:URL.createObjectURL(x.b)}))}catch(e){}render()}
+async function addSong(f){const n=name(f);try{await rq((await store('readwrite')).add({n,b:f}))}catch(e){}songs.push({n,u:URL.createObjectURL(f)})}
+async function clearLib(){try{await rq((await store('readwrite')).clear())}catch(e){}au.pause();au.removeAttribute('src');songs=[];cur=-1;idx.songs=0;stack=['main'];render()}
 const name=f=>f.name.replace(/\.[^.]+$/,'');
 function items(){const s=stack[stack.length-1];
  if(s==='main')return mainItems();
@@ -64,13 +70,14 @@ function select(){const s=stack[stack.length-1];
   if(m==='Music'){stack.push('songs')}
   else if(m==='Now Playing'){stack.push('np')}
   else if(m==='Shuffle Songs'){shuffle=true;if(songs.length){play(Math.random()*songs.length|0);stack.push('np')}}
+  else if(m==='Clear Library'){if(confirm('Delete all saved songs?'))clearLib()}
   else $('pick').click();}
  else if(s==='songs'&&songs.length){shuffle=false;play(idx.songs);stack.push('np')}
  render()}
 function back(){if(stack.length>1)stack.pop();render()}
 function scroll(d){const s=stack[stack.length-1];if(s==='np'){au.volume=Math.max(0,Math.min(1,au.volume+d*0.05));return}
  const n=items().length;idx[s]=Math.max(0,Math.min(n-1,(idx[s]||0)+d));render()}
-$('pick').onchange=e=>{for(const f of e.target.files)songs.push({n:name(f),u:URL.createObjectURL(f)});stack=['main','songs'];idx.songs=0;render()};
+$('pick').onchange=async e=>{for(const f of e.target.files)await addSong(f);e.target.value='';stack=['main','songs'];idx.songs=0;render()};
 // wheel
 const w=$('wheel');let last=null,acc=0,moved=false;
 const ang=e=>{const r=w.getBoundingClientRect();return Math.atan2(e.clientY-r.top-r.height/2,e.clientX-r.left-r.width/2)};
@@ -78,5 +85,5 @@ w.onpointerdown=e=>{w.setPointerCapture(e.pointerId);last=ang(e);acc=0;moved=fal
 w.onpointermove=e=>{if(last===null)return;const a=ang(e);let d=a-last;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;last=a;acc+=d;
  if(Math.abs(acc)>0.5){moved=true;scroll(acc>0?1:-1);acc=0;if(navigator.vibrate)navigator.vibrate(5)}};
 w.onpointerup=()=>{if(!moved){({menu:back,prev,next,play:toggle,sel:select})[w._d]?.()}last=null};
-render();
+render();loadLib();
 </script></body></html>
