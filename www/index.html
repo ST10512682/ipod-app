@@ -24,6 +24,35 @@ html.hasbg,html.hasbg body{background:var(--bgimg) center/cover no-repeat,var(--
 .sk{position:absolute;transform:translate(-50%,-50%);height:auto;-webkit-user-drag:none}
 #stk.edit .sk{pointer-events:auto;touch-action:none}
 #stk.edit .sk.on{outline:2px dashed #fff;filter:drop-shadow(0 0 3px #000)}
+html,body{touch-action:none}
+#gba{position:fixed;inset:0;z-index:100;background:#0b0b0d;color:#fff;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);touch-action:none;font-family:-apple-system,Helvetica,Arial,sans-serif}
+#gba[hidden]{display:none}
+#gba button{font:inherit;color:#fff;border:0;background:#2a2a30;border-radius:10px;padding:8px 12px;-webkit-appearance:none;appearance:none;touch-action:none}
+#gba button.on,#gba button:active{background:#5a5a66}
+.gtop,.gbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px}
+.gbar{justify-content:center}
+#gtitle{opacity:.7;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gscr{position:relative;background:#000;width:100%;aspect-ratio:3/2}
+#gcv{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;background:#000}
+#gmsg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:14px;background:rgba(0,0,0,.82);font-size:15px;line-height:1.4}
+.gl{display:flex;flex-direction:column;gap:8px;width:100%;max-height:100%;overflow:auto}
+.gctl{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;padding:6px 16px 10px}
+.gsh{grid-column:1/3;display:flex;justify-content:space-between}
+.gsh button{width:84px;height:40px}
+.gdp{position:relative;grid-row:2;justify-self:start;align-self:center;width:150px;height:150px;border-radius:50%;background:#1d1d22;touch-action:none}
+.gdp b{position:absolute;width:44px;height:44px;line-height:44px;text-align:center;font-size:18px;color:#999;pointer-events:none}
+.gdp b:nth-child(1){left:53px;top:6px}.gdp b:nth-child(2){left:6px;top:53px}.gdp b:nth-child(3){right:6px;top:53px}.gdp b:nth-child(4){left:53px;bottom:6px}
+.gab{grid-row:2;grid-column:2;justify-self:end;align-self:center;position:relative;width:150px;height:130px}
+.gab button{position:absolute;width:68px;height:68px;border-radius:50%;font-weight:700;font-size:22px}
+.gab [data-b=a]{right:0;top:6px}.gab [data-b=b]{left:0;bottom:6px}
+.gss{grid-column:1/3;display:flex;gap:18px;justify-content:center}
+.gss button{height:34px;font-size:12px;letter-spacing:1px}
+@media (orientation:landscape){
+ #gba{flex-direction:row}.gtop{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:3;background:#0008;border-radius:0 0 12px 12px}
+ .gscr{position:absolute;inset:0;width:auto;aspect-ratio:auto}.gctl{position:absolute;inset:0;display:block;pointer-events:none;z-index:2}
+ .gctl>*{position:absolute;pointer-events:auto}.gsh{left:12px;right:12px;top:6px;grid-column:auto;pointer-events:none}.gsh button{pointer-events:auto}
+ .gdp{left:18px;bottom:14px}.gab{right:18px;bottom:14px}.gss{left:50%;bottom:6px;transform:translateX(-50%)}
+ .gbar{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);z-index:3}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;position:fixed;inset:0;overflow:hidden;overscroll-behavior:none;background:var(--page)}
 body{display:flex;align-items:center;justify-content:center;font-family:-apple-system,Helvetica,Arial,sans-serif;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
@@ -59,7 +88,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
 .wheel .l{left:3%;top:32%;width:26%;height:36%}.wheel .r{right:3%;top:32%;width:26%;height:36%}
 .wheel .c{left:32%;top:32%;width:36%;height:36%;border-radius:50%;background:linear-gradient(var(--c1),var(--c2));box-shadow:inset 0 0 0 1px var(--edge)}
 .wheel .c:active{opacity:1;filter:brightness(.9)}
-#pick,#pickBg,#pickStk{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
+#pick,#pickBg,#pickStk,#pickRom{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
 </style></head><body>
 <div class="ipod">
  <div class="screen"><div class="lcd"><div class="bar" id="title">iPod</div><label for="pick" class="add">+</label><div id="list"></div></div></div>
@@ -71,6 +100,18 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
  <div id="stk"></div>
 </div>
 <input type="file" id="pick" accept="audio/*,audio/mpeg,.mp3,.m4a,.aac,.wav,.flac,.ogg,.m3u,.m3u8,.pls,audio/x-mpegurl,application/vnd.apple.mpegurl" multiple>
+<div id="gba" hidden>
+ <div class="gtop"><button id="gexit">✕ Exit</button><span id="gtitle"></span><button id="gff">×1</button></div>
+ <div class="gscr"><canvas id="gcv" width="240" height="160"></canvas><div id="gmsg"></div></div>
+ <div class="gctl">
+  <div class="gsh"><button data-b="l">L</button><button data-b="r">R</button></div>
+  <div class="gdp" id="gdp"><b>▲</b><b>◀</b><b>▶</b><b>▼</b></div>
+  <div class="gab"><button data-b="b">B</button><button data-b="a">A</button></div>
+  <div class="gss"><button data-b="select">SELECT</button><button data-b="start">START</button></div>
+ </div>
+ <div class="gbar"><button id="gsave">Save state</button><button id="gload">Load state</button></div>
+</div>
+<input type="file" id="pickRom" accept=".gba,.gbc,.gb,.zip,.7z,application/zip,application/octet-stream">
 <input type="file" id="pickBg" accept="image/*">
 <input type="file" id="pickStk" accept="image/*" multiple>
 <audio id="au" playsinline></audio>
@@ -86,13 +127,13 @@ const scr=()=>stack[stack.length-1];
 function items(s){
  if(s==='main')return['Music','Cover Flow','Now Playing','Shuffle Songs','Add Songs','Games','Settings'];
  if(s==='songs')return songs.length?songs.map(x=>x.title||x.n):['No songs - tap + to add'];
- if(s==='settings')return['Theme','Background','Stickers','Cover Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.5.0'];
+ if(s==='settings')return['Theme','Background','Stickers','Cover Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.6.0'];
  if(s==='bgmenu')return['Choose Image','Remove Background'];
  if(s==='stkmenu')return['Add Sticker','Edit Stickers','Remove All'];
  if(s==='playlists')return pls.length?pls.map(p=>p.name+' ('+resolvePl(p).length+')'):['No playlists - add .m3u'];
  if(s==='plsongs')return plIds.length?plIds.map(i=>songs[i].title||songs[i].n):['No matching songs'];
  if(s==='album')return albIds.map(i=>songs[i].title||songs[i].n);
- if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick'];if(s==='music')return['Cover Flow','Playlists','Songs'];return[]}
+ if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick','Pok\u00E9mon'];if(s==='music')return['Cover Flow','Playlists','Songs'];return[]}
 function mark(s,i){if(['main','settings','music','games','bgmenu','stkmenu','playlists'].includes(s))return'\u203A';if(s==='songs')return i===cur?'\u266B':'';if(s==='album')return albIds[i]===cur?'\u266B':'';if(s==='plsongs')return plIds[i]===cur?'\u266B':'';if(s==='themes')return THEMES[i][0]===theme?'\u2713':'';return''}
 function openCF(){if(songs.length){cfl=albums();idx.cf=curAlbum();stack.push('cf')}}
 function albums(){const tr=x=>x.track||0,ttl=x=>x.title||x.n;
@@ -113,7 +154,7 @@ function renderCF(){const L=$('list');
  const c=cfl[i0];$('cb').textContent=c?c.t:'';$('ca').textContent=c?[c.a,c.ids.length>1?c.ids.length+' songs':''].filter(Boolean).join(' \u00B7 '):''}
 function syncStk(){const ed=scr()==='stk';$('stk').classList.toggle('edit',ed);if(!ed&&stkSel>=0){stkSel=-1;stkRender()}}
 function render(){const s=scr(),L=$('list');syncStk();
- if(s==='stk'){$('title').textContent='Stickers';L.innerHTML='<div style="padding:10px;line-height:1.55">Drag to move<br>Pinch to resize<br>Double-tap to remove<br><span style="opacity:.7">Press MENU when done</span></div>';return}
+ if(s==='stk'){$('title').textContent='Stickers';L.innerHTML='<div style="padding:10px;line-height:1.55">Drag to move<br>Pinch or spin wheel to resize<br>Double-tap to remove<br><span style="opacity:.7">Press MENU when done</span></div>';return}
  if(s==='cf'){$('title').textContent='Cover Flow';renderCF();return}
  if(s==='brick'){$('title').textContent='Brick';renderBrick();return}
  if(s==='np'){const t=songs[cur];$('title').textContent=(au.paused?'\u275A\u275A':'\u25B6')+' Now Playing';
@@ -148,12 +189,12 @@ function select(){const s=scr(),i=idx[s]||0;
  else if(s==='bgmenu'){if(i===0)$('pickBg').click();else removeBg()}
  else if(s==='stkmenu'){if(i===0)$('pickStk').click();else if(i===1){if(stks.length)stack.push('stk')}else if(confirm('Remove all stickers?'))clearStk()}
  else if(s==='music'){if(i===0)openCF();else if(i===1)stack.push('playlists');else stack.push('songs')}
- else if(s==='games')stack.push('brick');
+ else if(s==='games'){if(i===0)stack.push('brick');else gbaOpen()}
  else if(s==='brick')bkAct();
  else if(s==='themes')setTheme(THEMES[i][0]);
  render()}
 function back(){if(stack.length>1)stack.pop();render()}
-function scroll(d){const s=scr();if(s==='brick')return;
+function scroll(d){const s=scr();if(s==='brick')return;if(s==='stk'){stkResize(d);return}
  if(s==='np'){if(au.duration)au.currentTime=Math.max(0,Math.min(au.duration,au.currentTime+d*5));return}
  const n=items(s).length;idx[s]=Math.max(0,Math.min(n-1,(idx[s]||0)+d));render()}
 // Brick
@@ -194,6 +235,40 @@ function bkDraw(){const B=bk,g=B.x,cs=getComputedStyle(document.documentElement)
  g.textAlign='right';g.fillText('Lv '+B.lv+'  '+'\u2665'.repeat(B.lives),B.cw-6,3);
  const m={ready:'Press center to launch',paused:'Paused',over:'Game over - press center'}[B.st];
  if(m){g.textAlign='center';g.textBaseline='middle';g.fillText(m,B.cw/2,B.ch*.6)}}
+// GBA (mGBA wasm, single-threaded). ROMs are imported by the user and stay on this device.
+let emu=null,emuP=null,gRunning=false,gFF=false,gRoms=[],wasPlaying=false;
+function emuInit(){if(emuP)return emuP;emuP=(async()=>{const m=(await import('./emu/mgba.js')).default;const M=await m({canvas:$('gcv')});await M.FSInit();
+ M.addCoreCallbacks({saveDataUpdatedCallback:()=>{M.FSSync().catch(()=>{})}});emu=M;return M})().catch(e=>{emuP=null;throw e});return emuP}
+function gMsg(h){const m=$('gmsg');m.innerHTML=h||'';m.style.display=h?'flex':'none'}
+const romBase=r=>r.replace(/\.(gba|gbc|gb|zip|7z)$/i,'');
+function gList(){const isP=r=>/pok[e\u00E9]mon|fire.?red|leaf.?green/i.test(r),rs=gRoms.slice().sort((a,b)=>isP(b)-isP(a));
+ gMsg('<div class="gl">'+(rs.length?'<div style="opacity:.8">Choose a game</div>':'<div style="opacity:.85">No game found yet.<br>Add your own Pok\u00E9mon ROM (.gba or .zip) from this device.</div>')+
+  rs.map(r=>'<button data-r="'+esc(r)+'">\u25B6 '+esc(romBase(r))+'</button>').join('')+'<button id="gadd">+ Add ROM file</button></div>')}
+async function gbaOpen(){wasPlaying=!au.paused&&!!au.src;if(wasPlaying)au.pause();$('gba').hidden=false;$('gtitle').textContent='';gMsg('Loading emulator...');
+ try{const M=await emuInit();gRoms=M.listRoms().filter(x=>x!=='.'&&x!=='..');gList()}catch(e){gMsg('Emulator failed to load.<br><small>'+esc(e&&e.message||e)+'</small>')}}
+function gStart(rom){const M=emu;if(!M)return;const ok=M.loadGame(M.filePaths().gamePath+'/'+rom);
+ if(!ok){gMsg('Could not start this ROM.<br><small>If it is zipped, unzip it and add the .gba file.</small><div class="gl"><button id="gback">Back</button></div>');return}
+ gRunning=true;gMsg('');$('gtitle').textContent=romBase(rom);try{M.setVolume(100);M.setFastForwardMultiplier(1)}catch(e){}gFF=false;$('gff').textContent='\u00D71'}
+function gExit(){if(emu&&gRunning){try{emu.quitGame()}catch(e){}emu.FSSync().catch(()=>{});gRunning=false}$('gba').hidden=true;gMsg('');if(wasPlaying){au.play().catch(()=>{});wasPlaying=false}}
+$('gmsg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.r)gStart(b.dataset.r);else if(b.id==='gadd')$('pickRom').click();else if(b.id==='gback')gList()});
+$('pickRom').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;gMsg('Adding game...');
+ try{const M=await emuInit();await new Promise((res,rej)=>{try{M.uploadRom(f,res)}catch(x){rej(x)}});await M.FSSync();gRoms=M.listRoms().filter(x=>x!=='.'&&x!=='..');gList()}catch(x){gMsg('Could not add that file.<div class="gl"><button id="gback">Back</button></div>')}};
+$('gexit').onclick=gExit;
+$('gff').onclick=()=>{gFF=!gFF;try{emu.setFastForwardMultiplier(gFF?2:1)}catch(e){}$('gff').textContent=gFF?'\u00D72':'\u00D71'};
+const flash=(b,t)=>{const o=b.textContent;b.textContent=t;setTimeout(()=>b.textContent=o,1000)};
+$('gsave').onclick=async e=>{if(!gRunning)return;try{emu.saveState(1);await emu.FSSync();flash(e.target,'Saved \u2713')}catch(x){flash(e.target,'Failed')}};
+$('gload').onclick=e=>{if(!gRunning)return;let ok=false;try{ok=emu.loadState(1)}catch(x){}flash(e.target,ok?'Loaded \u2713':'No state')};
+function gBtn(k,d){if(!emu||!gRunning)return;try{d?emu.buttonPress(k):emu.buttonUnpress(k)}catch(e){}}
+document.querySelectorAll('#gba [data-b]').forEach(b=>{const k=b.dataset.b;
+ b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(x){}b.classList.add('on');gBtn(k,true)});
+ const up=()=>{b.classList.remove('on');gBtn(k,false)};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)});
+const dp=$('gdp'),held=new Set();
+function dpSet(e){const r=dp.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5,n=new Set(),ax=Math.abs(x),ay=Math.abs(y);
+ if(Math.hypot(x,y)>.1){if(y<-.1&&ay>=ax*.55)n.add('up');if(y>.1&&ay>=ax*.55)n.add('down');if(x<-.1&&ax>=ay*.55)n.add('left');if(x>.1&&ax>=ay*.55)n.add('right')}
+ held.forEach(k=>{if(!n.has(k))gBtn(k,false)});n.forEach(k=>{if(!held.has(k))gBtn(k,true)});held.clear();n.forEach(k=>held.add(k))}
+const dpUp=()=>{held.forEach(k=>gBtn(k,false));held.clear()};
+dp.addEventListener('pointerdown',e=>{e.preventDefault();try{dp.setPointerCapture(e.pointerId)}catch(x){}dpSet(e)});
+dp.addEventListener('pointermove',e=>{if(e.buttons||e.pressure>0)dpSet(e)});dp.addEventListener('pointerup',dpUp);dp.addEventListener('pointercancel',dpUp);
 // library (IndexedDB)
 const DB=new Promise((res,rej)=>{const r=indexedDB.open('ipod',2);r.onupgradeneeded=()=>{const d=r.result,mk=(n,o)=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,o)};mk('songs',{keyPath:'id',autoIncrement:true});mk('playlists',{keyPath:'id',autoIncrement:true});mk('stickers',{keyPath:'id',autoIncrement:true});mk('meta')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const store=async(m,n='songs')=>(await DB).transaction(n,m).objectStore(n);
@@ -255,18 +330,23 @@ $('pickStk').onchange=async e=>{const fs=[...e.target.files];e.target.value='';i
  stkSel=stks.length-1;stack=['main','settings','stkmenu','stk'];render();stkRender()};
 const stkEl=$('stk'),pts=new Map();let gs=null,lastTap={i:-1,t:0};
 const pdist=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};
-stkEl.addEventListener('pointerdown',e=>{const el=e.target.closest('.sk');if(!el||scr()!=='stk')return;e.preventDefault();
- const i=+el.dataset.i,s=stks[i];if(stkSel!==i){stkSel=i;stkEl.querySelectorAll('.sk').forEach(x=>x.classList.toggle('on',+x.dataset.i===i))}
- try{el.setPointerCapture(e.pointerId)}catch(x){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(gs&&gs.i===i&&pts.size>1){gs.d0=pdist();gs.w0=s.w;gs.moved=true}else gs={i,x0:s.x,y0:s.y,w0:s.w,sx:e.clientX,sy:e.clientY,d0:0,moved:false,el}});
-stkEl.addEventListener('pointermove',e=>{if(!gs||!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});const s=stks[gs.i],r=stkEl.getBoundingClientRect();
- if(pts.size>1&&gs.d0){s.w=Math.max(.04,Math.min(1.3,gs.w0*pdist()/gs.d0));gs.el.style.width=s.w*100+'%'}
+const stkMarks=()=>stkEl.querySelectorAll('.sk').forEach(x=>x.classList.toggle('on',+x.dataset.i===stkSel));
+const stkElOf=i=>stkEl.querySelector('.sk[data-i="'+i+'"]');
+document.addEventListener('pointerdown',e=>{if(scr()!=='stk')return;const el=e.target.closest&&e.target.closest('.sk');
+ pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pts.size===1){if(el){e.preventDefault();const i=+el.dataset.i,s=stks[i];stkSel=i;stkMarks();gs={i,x0:s.x,y0:s.y,w0:s.w,sx:e.clientX,sy:e.clientY,d0:0,moved:false,el}}}
+ else if(pts.size===2){const i=gs?gs.i:stkSel,s=stks[i];if(!s)return;e.preventDefault();if(!gs)gs={i,x0:s.x,y0:s.y,sx:0,sy:0,el:stkElOf(i)};Object.assign(gs,{w0:s.w,d0:pdist(),moved:true})}},true);
+document.addEventListener('pointermove',e=>{if(!gs||!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});const s=stks[gs.i],r=stkEl.getBoundingClientRect();
+ if(pts.size>1&&gs.d0){s.w=Math.max(.04,Math.min(1.3,gs.w0*pdist()/gs.d0));if(gs.el)gs.el.style.width=s.w*100+'%'}
  else if(pts.size===1){const dx=(e.clientX-gs.sx)/r.width,dy=(e.clientY-gs.sy)/r.height;if(Math.abs(dx)+Math.abs(dy)>.012)gs.moved=true;
-  if(gs.moved){s.x=Math.max(0,Math.min(1,gs.x0+dx));s.y=Math.max(0,Math.min(1,gs.y0+dy));gs.el.style.left=s.x*100+'%';gs.el.style.top=s.y*100+'%'}}});
-const stkUp=e=>{if(!gs||!pts.has(e.pointerId))return;pts.delete(e.pointerId);
- if(pts.size===0){const s=stks[gs.i];if(gs.moved)saveStk(s);else{const n=Date.now();if(lastTap.i===gs.i&&n-lastTap.t<350){lastTap.i=-1;if(confirm('Remove this sticker?'))delStk(gs.i)}else lastTap={i:gs.i,t:n}}gs=null}
- else if(pts.size===1){const s=stks[gs.i],p=[...pts.values()][0];gs.sx=p.x;gs.sy=p.y;gs.x0=s.x;gs.y0=s.y;gs.d0=0}};
-stkEl.addEventListener('pointerup',stkUp);stkEl.addEventListener('pointercancel',stkUp);
+  if(gs.moved&&gs.el){s.x=Math.max(0,Math.min(1,gs.x0+dx));s.y=Math.max(0,Math.min(1,gs.y0+dy));gs.el.style.left=s.x*100+'%';gs.el.style.top=s.y*100+'%'}}},true);
+const stkUp=e=>{if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);if(!gs)return;
+ if(pts.size===0){const s=stks[gs.i];if(gs.moved){saveStk(s);lastDrag=Date.now()}else{const n=Date.now();if(lastTap.i===gs.i&&n-lastTap.t<350){lastTap.i=-1;if(confirm('Remove this sticker?'))delStk(gs.i)}else lastTap={i:gs.i,t:n}}gs=null}
+ else if(pts.size===1){const s=stks[gs.i],p=[...pts.values()][0];gs.sx=p.x;gs.sy=p.y;gs.x0=s.x;gs.y0=s.y;gs.d0=0;lastDrag=Date.now()}};
+document.addEventListener('pointerup',stkUp,true);document.addEventListener('pointercancel',stkUp,true);
+document.addEventListener('gesturestart',e=>e.preventDefault());
+let stkT=0;
+function stkResize(d){const s=stks[stkSel];if(!s)return;s.w=Math.max(.04,Math.min(1.3,s.w*(1+d*.08)));const el=stkElOf(stkSel);if(el)el.style.width=s.w*100+'%';clearTimeout(stkT);stkT=setTimeout(()=>saveStk(s),400)}
 async function loadAll(){await loadLib();try{pls=await rq((await store('readonly','playlists')).getAll())}catch(e){}
  try{const a=await rq((await store('readonly','stickers')).getAll());stks=a.map(r=>({id:r.id,b:r.b,u:URL.createObjectURL(r.b),x:r.x,y:r.y,w:r.w}));stkRender()}catch(e){}
  try{const b=await rq((await store('readonly','meta')).get('bg'));if(b)applyBg(b)}catch(e){}render()}
@@ -279,7 +359,7 @@ document.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>
 $('list').addEventListener('click',e=>{const c=e.target.closest('.cv');if(c){const i=+c.dataset.i;if(i===idx.cf)select();else{idx.cf=i;render()}return}const r=e.target.closest('.row');if(!r)return;idx[scr()]=+r.dataset.i;select()});
 const w=$('wheel');let a0=null,acc=0,drag=false;
 const ang=e=>{const r=w.getBoundingClientRect();return Math.atan2(e.clientY-r.top-r.height/2,e.clientX-r.left-r.width/2)};
-w.addEventListener('pointerdown',e=>{a0=ang(e);acc=0;drag=false});
+w.addEventListener('pointerdown',e=>{if(gs)return;a0=ang(e);acc=0;drag=false});
 w.addEventListener('pointermove',e=>{if(a0===null)return;const a=ang(e);let d=a-a0;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;a0=a;acc+=d;if(scr()==='brick')bkMove(d);
  if(!drag&&Math.abs(acc)>.25){drag=true;try{w.setPointerCapture(e.pointerId)}catch(x){}}
  if(drag&&scr()!=='brick'&&Math.abs(acc)>.5){scroll(acc>0?1:-1);acc=0}});
