@@ -13,6 +13,7 @@ jobs:
         with: { node-version: 20 }
       - run: npm install
       - run: npx cap add ios
+      - run: npx --yes @capacitor/assets@3 generate --ios
       - run: npx cap sync ios
       - name: Allow background audio
         run: /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" -c "Add :UIBackgroundModes:0 string audio" ios/App/App/Info.plist
