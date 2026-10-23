@@ -1,0 +1,5 @@
+www/emu contains mGBA compiled to WebAssembly (@thenick775/mgba-wasm 1.1.1),
+licensed under MPL-2.0. Source: https://github.com/mgba-emu/mgba and
+https://github.com/thenick775/mgba (wasm fork). https://mozilla.org/MPL/2.0/
+
+No game ROMs are included. Users import their own games on their own device.
