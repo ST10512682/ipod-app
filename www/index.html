@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>iPod</title>
+<title>aPod</title>
 <style>
 :root{--W:min(92vw,calc((100vh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))*.6),360px);
 --page:#1a1a1c;--b1:#f4f4f2;--b2:#cfcfcc;--w:#e9e9e7;--wl:#777;--c1:#fafaf8;--c2:#d8d8d4;--edge:#bbb;--lcd:#fff;--fg:#111;--bar1:#e8eef6;--bar2:#a9b8cc;--s1:#5aa0ee;--s2:#1f6fd0}
@@ -91,7 +91,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
 #pick,#pickBg,#pickStk,#pickRom{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
 </style></head><body>
 <div class="ipod">
- <div class="screen"><div class="lcd"><div class="bar" id="title">iPod</div><label for="pick" class="add">+</label><div id="list"></div></div></div>
+ <div class="screen"><div class="lcd"><div class="bar" id="title">aPod</div><label for="pick" class="add">+</label><div id="list"></div></div></div>
  <div class="wheel" id="wheel">
   <button class="t" data-k="menu">MENU</button><button class="l" data-k="prev">&#9664;&#9664;</button>
   <button class="r" data-k="next">&#9654;&#9654;</button><button class="b" data-k="play">&#9654;&#10074;&#10074;</button>
@@ -117,7 +117,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
 <audio id="au" playsinline></audio>
 <script>
 const $=id=>document.getElementById(id),au=$('au');
-const THEMES=[['classic','Classic White'],['black','Black'],['u2','U2 Red'],['pink','Pink'],['blue','Blue'],['night','Night'],['glass','Liquid Glass']];
+const THEMES=[['classic','Classic White'],['black','Black'],['u2','U2 Red'],['pink','Pink'],['blue','Blue'],['night','Night'],['glass','Glass']];
 let songs=[],cur=-1,stack=['main'],idx={main:0,songs:0,settings:0,themes:0,cf:0,games:0,music:0},cfl=[],queue=null,pls=[],plIds=[],plTitle='',albIds=[],albTitle='',cfMode='albums',stks=[],stkSel=-1,shuffle=false,theme='classic',lastDrag=0;
 const fname=f=>f.name.replace(/\.[^.]+$/,'');
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -125,15 +125,15 @@ function setTheme(t){theme=t;document.documentElement.dataset.t=t;try{localStora
 try{setTheme(localStorage.getItem('t')||'classic')}catch(e){setTheme('classic')}
 const scr=()=>stack[stack.length-1];
 function items(s){
- if(s==='main')return['Music','Cover Flow','Now Playing','Shuffle Songs','Add Songs','Games','Settings'];
+ if(s==='main')return['Music','Album Flow','Now Playing','Shuffle Songs','Add Songs','Games','Settings'];
  if(s==='songs')return songs.length?songs.map(x=>x.title||x.n):['No songs - tap + to add'];
- if(s==='settings')return['Theme','Background','Stickers','Cover Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.6.0'];
+ if(s==='settings')return['Theme','Background','Stickers','Album Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.7.0'];
  if(s==='bgmenu')return['Choose Image','Remove Background'];
  if(s==='stkmenu')return['Add Sticker','Edit Stickers','Remove All'];
  if(s==='playlists')return pls.length?pls.map(p=>p.name+' ('+resolvePl(p).length+')'):['No playlists - add .m3u'];
  if(s==='plsongs')return plIds.length?plIds.map(i=>songs[i].title||songs[i].n):['No matching songs'];
  if(s==='album')return albIds.map(i=>songs[i].title||songs[i].n);
- if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick','Pok\u00E9mon'];if(s==='music')return['Cover Flow','Playlists','Songs'];return[]}
+ if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick','GBA'];if(s==='music')return['Album Flow','Playlists','Songs'];return[]}
 function mark(s,i){if(['main','settings','music','games','bgmenu','stkmenu','playlists'].includes(s))return'\u203A';if(s==='songs')return i===cur?'\u266B':'';if(s==='album')return albIds[i]===cur?'\u266B':'';if(s==='plsongs')return plIds[i]===cur?'\u266B':'';if(s==='themes')return THEMES[i][0]===theme?'\u2713':'';return''}
 function openCF(){if(songs.length){cfl=albums();idx.cf=curAlbum();stack.push('cf')}}
 function albums(){const tr=x=>x.track||0,ttl=x=>x.title||x.n;
@@ -155,17 +155,17 @@ function renderCF(){const L=$('list');
 function syncStk(){const ed=scr()==='stk';$('stk').classList.toggle('edit',ed);if(!ed&&stkSel>=0){stkSel=-1;stkRender()}}
 function render(){const s=scr(),L=$('list');syncStk();
  if(s==='stk'){$('title').textContent='Stickers';L.innerHTML='<div style="padding:10px;line-height:1.55">Drag to move<br>Pinch or spin wheel to resize<br>Double-tap to remove<br><span style="opacity:.7">Press MENU when done</span></div>';return}
- if(s==='cf'){$('title').textContent='Cover Flow';renderCF();return}
+ if(s==='cf'){$('title').textContent='Album Flow';renderCF();return}
  if(s==='brick'){$('title').textContent='Brick';renderBrick();return}
  if(s==='np'){const t=songs[cur];$('title').textContent=(au.paused?'\u275A\u275A':'\u25B6')+' Now Playing';
   L.innerHTML=t?`<div class="np"><div class="tp"><div class="art"${t.art?` style="background-image:url('${t.art}')"`:''}>${t.art?'':'\u266B'}</div><div class="meta"><b>${esc(t.title||t.n)}</b><span>${esc(t.artist||'')}</span><span>${esc(t.album||'')}</span></div></div><div class="prog"><i id="pb"></i></div><div class="times"><span id="t1">0:00</span><span id="t2">-0:00</span></div></div>`:'<div class="np">Nothing playing</div>';tick();return}
- $('title').textContent={main:'iPod',music:'Music',games:'Games',songs:'Songs',settings:'Settings',themes:'Theme',bgmenu:'Background',stkmenu:'Stickers',playlists:'Playlists',plsongs:plTitle,album:albTitle}[s];
+ $('title').textContent={main:'aPod',music:'Music',games:'Games',songs:'Songs',settings:'Settings',themes:'Theme',bgmenu:'Background',stkmenu:'Stickers',playlists:'Playlists',plsongs:plTitle,album:albTitle}[s];
  const it=items(s),i=idx[s]||0,st=Math.max(0,Math.min(i-3,it.length-6));
  L.innerHTML=it.slice(st,st+6).map((x,k)=>`<div class="row${st+k===i?' sel':''}" data-i="${st+k}"><span>${esc(x)}</span><span>${mark(s,st+k)}</span></div>`).join('')}
 const fmt=t=>{t=Math.max(0,t|0);return(t/60|0)+':'+String(t%60).padStart(2,'0')};
 function tick(){const b=$('pb');if(!b)return;const d=au.duration||0;b.style.width=d?au.currentTime/d*100+'%':'0';$('t1').textContent=fmt(au.currentTime);$('t2').textContent='-'+fmt(d-au.currentTime)}
 au.ontimeupdate=tick;au.onended=()=>next();au.onplay=au.onpause=()=>{if(scr()==='np')render()};
-function media(t){if(!('mediaSession' in navigator))return;try{const m=navigator.mediaSession;m.metadata=new MediaMetadata({title:t.title||t.n,artist:t.artist||'iPod',album:t.album||'',artwork:t.art?[{src:t.art}]:[]});m.setActionHandler('play',()=>au.play());m.setActionHandler('pause',()=>au.pause());m.setActionHandler('previoustrack',prev);m.setActionHandler('nexttrack',next)}catch(e){}}
+function media(t){if(!('mediaSession' in navigator))return;try{const m=navigator.mediaSession;m.metadata=new MediaMetadata({title:t.title||t.n,artist:t.artist||'aPod',album:t.album||'',artwork:t.art?[{src:t.art}]:[]});m.setActionHandler('play',()=>au.play());m.setActionHandler('pause',()=>au.pause());m.setActionHandler('previoustrack',prev);m.setActionHandler('nexttrack',next)}catch(e){}}
 function play(i){const t=songs[i];if(!t)return;cur=i;au.src=t.u;au.play().catch(()=>{});media(t);render()}
 const order=()=>queue||songs.map((_,i)=>i);
 function next(){const o=order();if(!o.length)return;play(shuffle?o[Math.random()*o.length|0]:o[(o.indexOf(cur)+1)%o.length])}
@@ -174,7 +174,7 @@ function toggle(){if(cur<0&&songs.length){play(0);return}au.paused?au.play():au.
 function select(){const s=scr(),i=idx[s]||0;
  if(s==='main'){const m=items('main')[i];
   if(m==='Music')stack.push('music');
-  else if(m==='Cover Flow')openCF();
+  else if(m==='Album Flow')openCF();
   else if(m==='Now Playing')stack.push('np');
   else if(m==='Shuffle Songs'){if(songs.length){queue=null;shuffle=true;play(Math.random()*songs.length|0);stack.push('np')}}
   else if(m==='Add Songs')$('pick').click();
@@ -241,8 +241,8 @@ function emuInit(){if(emuP)return emuP;emuP=(async()=>{const m=(await import('./
  M.addCoreCallbacks({saveDataUpdatedCallback:()=>{M.FSSync().catch(()=>{})}});emu=M;return M})().catch(e=>{emuP=null;throw e});return emuP}
 function gMsg(h){const m=$('gmsg');m.innerHTML=h||'';m.style.display=h?'flex':'none'}
 const romBase=r=>r.replace(/\.(gba|gbc|gb|zip|7z)$/i,'');
-function gList(){const isP=r=>/pok[e\u00E9]mon|fire.?red|leaf.?green/i.test(r),rs=gRoms.slice().sort((a,b)=>isP(b)-isP(a));
- gMsg('<div class="gl">'+(rs.length?'<div style="opacity:.8">Choose a game</div>':'<div style="opacity:.85">No game found yet.<br>Add your own Pok\u00E9mon ROM (.gba or .zip) from this device.</div>')+
+function gList(){const rs=gRoms.slice().sort();
+ gMsg('<div class="gl">'+(rs.length?'<div style="opacity:.8">Choose a game</div>':'<div style="opacity:.85">No game found yet.<br>Add a game ROM (.gba or .zip) from this device.</div>')+
   rs.map(r=>'<button data-r="'+esc(r)+'">\u25B6 '+esc(romBase(r))+'</button>').join('')+'<button id="gadd">+ Add ROM file</button></div>')}
 async function gbaOpen(){wasPlaying=!au.paused&&!!au.src;if(wasPlaying)au.pause();$('gba').hidden=false;$('gtitle').textContent='';gMsg('Loading emulator...');
  try{const M=await emuInit();gRoms=M.listRoms().filter(x=>x!=='.'&&x!=='..');gList()}catch(e){gMsg('Emulator failed to load.<br><small>'+esc(e&&e.message||e)+'</small>')}}
