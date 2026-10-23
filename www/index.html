@@ -127,7 +127,7 @@ const scr=()=>stack[stack.length-1];
 function items(s){
  if(s==='main')return['Music','Album Flow','Now Playing','Shuffle Songs','Add Songs','Games','Settings'];
  if(s==='songs')return songs.length?songs.map(x=>x.title||x.n):['No songs - tap + to add'];
- if(s==='settings')return['Theme','Background','Stickers','Album Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.7.0'];
+ if(s==='settings')return['Theme','Background','Stickers','Album Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.8.0'];
  if(s==='bgmenu')return['Choose Image','Remove Background'];
  if(s==='stkmenu')return['Add Sticker','Edit Stickers','Remove All'];
  if(s==='playlists')return pls.length?pls.map(p=>p.name+' ('+resolvePl(p).length+')'):['No playlists - add .m3u'];
@@ -164,8 +164,12 @@ function render(){const s=scr(),L=$('list');syncStk();
  L.innerHTML=it.slice(st,st+6).map((x,k)=>`<div class="row${st+k===i?' sel':''}" data-i="${st+k}"><span>${esc(x)}</span><span>${mark(s,st+k)}</span></div>`).join('')}
 const fmt=t=>{t=Math.max(0,t|0);return(t/60|0)+':'+String(t%60).padStart(2,'0')};
 function tick(){const b=$('pb');if(!b)return;const d=au.duration||0;b.style.width=d?au.currentTime/d*100+'%':'0';$('t1').textContent=fmt(au.currentTime);$('t2').textContent='-'+fmt(d-au.currentTime)}
-au.ontimeupdate=tick;au.onended=()=>next();au.onplay=au.onpause=()=>{if(scr()==='np')render()};
-function media(t){if(!('mediaSession' in navigator))return;try{const m=navigator.mediaSession;m.metadata=new MediaMetadata({title:t.title||t.n,artist:t.artist||'aPod',album:t.album||'',artwork:t.art?[{src:t.art}]:[]});m.setActionHandler('play',()=>au.play());m.setActionHandler('pause',()=>au.pause());m.setActionHandler('previoustrack',prev);m.setActionHandler('nexttrack',next)}catch(e){}}
+let lastPos=0;
+function posState(){const n=Date.now();if(n-lastPos<1000||!('mediaSession' in navigator)||!au.duration||!isFinite(au.duration))return;lastPos=n;
+ try{navigator.mediaSession.setPositionState({duration:au.duration,position:Math.min(au.currentTime,au.duration),playbackRate:au.playbackRate||1})}catch(e){}}
+function mState(){try{navigator.mediaSession.playbackState=au.paused?'paused':'playing'}catch(e){}if(scr()==='np')render()}
+au.ontimeupdate=()=>{tick();posState()};au.onended=()=>next();au.onplay=au.onpause=mState;
+function media(t){if(!('mediaSession' in navigator))return;try{const m=navigator.mediaSession;m.metadata=new MediaMetadata({title:t.title||t.n,artist:t.artist||'aPod',album:t.album||'',artwork:t.art?[{src:t.art}]:[]});m.setActionHandler('play',()=>au.play());m.setActionHandler('pause',()=>au.pause());m.setActionHandler('previoustrack',prev);m.setActionHandler('nexttrack',next);m.setActionHandler('seekto',x=>{if(x.seekTime!=null)au.currentTime=x.seekTime})}catch(e){}}
 function play(i){const t=songs[i];if(!t)return;cur=i;au.src=t.u;au.play().catch(()=>{});media(t);render()}
 const order=()=>queue||songs.map((_,i)=>i);
 function next(){const o=order();if(!o.length)return;play(shuffle?o[Math.random()*o.length|0]:o[(o.indexOf(cur)+1)%o.length])}
