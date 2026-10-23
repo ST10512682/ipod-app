@@ -25,12 +25,12 @@ jobs:
         run: |
           mkdir Payload
           cp -R build/Build/Products/Release-iphoneos/App.app Payload/
-          zip -r ipod.ipa Payload
+          zip -r apod.ipa Payload
       - uses: actions/upload-artifact@v4
         with:
-          name: ipod-ipa
-          path: ipod.ipa
+          name: apod-ipa
+          path: apod.ipa
       - uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: ipod.ipa
+          files: apod.ipa
