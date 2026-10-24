@@ -43,7 +43,7 @@ html,body{touch-action:none}
 .gdp b{position:absolute;width:44px;height:44px;line-height:44px;text-align:center;font-size:18px;color:#999;pointer-events:none}
 .gdp b:nth-child(1){left:53px;top:6px}.gdp b:nth-child(2){left:6px;top:53px}.gdp b:nth-child(3){right:6px;top:53px}.gdp b:nth-child(4){left:53px;bottom:6px}
 .gab{grid-row:2;grid-column:2;justify-self:end;align-self:center;position:relative;width:150px;height:130px}
-.gab button{position:absolute;width:68px;height:68px;border-radius:50%;font-weight:700;font-size:22px}
+#gba .gab button{position:absolute;width:68px;height:68px;border-radius:50%;font-weight:700;font-size:22px}
 .gab [data-b=a]{right:0;top:6px}.gab [data-b=b]{left:0;bottom:6px}
 .gss{grid-column:1/3;display:flex;gap:18px;justify-content:center}
 .gss button{height:34px;font-size:12px;letter-spacing:1px}
@@ -68,7 +68,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
 .cf{height:calc(var(--W)*.525)}
 .stg{position:relative;height:calc(var(--W)*.36);perspective:calc(var(--W)*.8);-webkit-perspective:calc(var(--W)*.8)}
 .cv{position:absolute;left:50%;top:calc(var(--W)*.025);display:flex;align-items:center;justify-content:center;background:#8886 center/cover no-repeat;font-size:2em;transition:transform .3s;-webkit-box-reflect:below 1px linear-gradient(transparent 55%,rgba(0,0,0,.3))}
-.cap{margin-top:calc(var(--W)*-.045);text-align:center;position:relative;line-height:1.2;font-size:.85em;padding:0 6px}
+.cap{margin-top:calc(var(--W)*.005);text-align:center;position:relative;line-height:1.2;font-size:.85em;padding:0 6px}
 .cap b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cap span{display:block;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bk{display:block;width:100%;height:calc(var(--W)*.525)}
@@ -127,7 +127,7 @@ const scr=()=>stack[stack.length-1];
 function items(s){
  if(s==='main')return['Music','Album Flow','Now Playing','Shuffle Songs','Add Songs','Games','Settings'];
  if(s==='songs')return songs.length?songs.map(x=>x.title||x.n):['No songs - tap + to add'];
- if(s==='settings')return['Theme','Background','Stickers','Album Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.8.0'];
+ if(s==='settings')return['Theme','Background','Stickers','Album Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.8.1'];
  if(s==='bgmenu')return['Choose Image','Remove Background'];
  if(s==='stkmenu')return['Add Sticker','Edit Stickers','Remove All'];
  if(s==='playlists')return pls.length?pls.map(p=>p.name+' ('+resolvePl(p).length+')'):['No playlists - add .m3u'];
