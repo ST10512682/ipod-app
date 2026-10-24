@@ -8,6 +8,18 @@ An offline music player with a retro click-wheel look, built as a web app and pa
 
 ---
 
+## Screenshots
+
+<table>
+<tr><td align="center"><img src="docs/screenshots/01-menu.png" width="200"><br><sub>Main menu</sub></td><td align="center"><img src="docs/screenshots/02-songs.png" width="200"><br><sub>Songs</sub></td><td align="center"><img src="docs/screenshots/03-now-playing.png" width="200"><br><sub>Now Playing with cover art</sub></td></tr>
+<tr><td align="center"><img src="docs/screenshots/04-album-flow.png" width="200"><br><sub>Album Flow</sub></td><td align="center"><img src="docs/screenshots/05-theme-red.png" width="200"><br><sub>Red theme</sub></td><td align="center"><img src="docs/screenshots/06-glass-background.png" width="200"><br><sub>Glass theme + custom background</sub></td></tr>
+<tr><td align="center"><img src="docs/screenshots/07-stickers.png" width="200"><br><sub>Stickers</sub></td><td align="center"><img src="docs/screenshots/08-brick.png" width="200"><br><sub>Brick game</sub></td><td align="center"><img src="docs/screenshots/09-gba.png" width="200"><br><sub>GBA emulator controls</sub></td></tr>
+</table>
+
+<sub>Screenshots use generated sample songs and artwork.</sub>
+
+---
+
 ## Install on Android
 
 Works on Android 5.1 and newer.
