@@ -161,7 +161,7 @@ object MusicPlayer {
         mp?.seekTo(ms)
     }
 
-    fun setVol(v: Float) {
+    fun changeVol(v: Float) {
         vol = v.coerceIn(0f, 1f)
         mp?.setVolume(vol, vol)
     }
