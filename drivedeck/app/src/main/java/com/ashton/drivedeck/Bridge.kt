@@ -76,7 +76,7 @@ class Bridge(private val a: MainActivity) {
     @JavascriptInterface fun next() { a.runOnUiThread { MusicPlayer.next() } }
     @JavascriptInterface fun prev() { a.runOnUiThread { MusicPlayer.prev() } }
     @JavascriptInterface fun seek(ms: Int) { a.runOnUiThread { MusicPlayer.seek(ms) } }
-    @JavascriptInterface fun setVol(v: Double) { a.runOnUiThread { MusicPlayer.setVol(v.toFloat()) } }
+    @JavascriptInterface fun setVol(v: Double) { a.runOnUiThread { MusicPlayer.changeVol(v.toFloat()) } }
     @JavascriptInterface fun fft(): String = MusicPlayer.fft()
 
     // ---- clips ----
