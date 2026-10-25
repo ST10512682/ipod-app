@@ -8,6 +8,15 @@ A dash cam and music player in one app, styled like a 1970s/80s car stereo. Andr
 - **Music:** plays songs stored on the phone, with an amber spectrum display, an analog-style dial that tracks the song, 6 presets (hold a preset to store the current song), and a volume knob.
 - **Backlight colours:** amber, green, ice, red.
 
+## Screenshots
+
+<table>
+<tr><td align="center"><img src="docs/01-main.png" width="420"><br><sub>Main screen: amber display, spectrum, live camera window</sub></td><td align="center"><img src="docs/03-clips.png" width="420"><br><sub>Clips list</sub></td></tr>
+<tr><td align="center"><img src="docs/04-settings.png" width="420"><br><sub>Settings</sub></td><td align="center"><img src="docs/05-green.png" width="420"><br><sub>Green backlight</sub></td></tr>
+</table>
+
+<sub>Rendered in a browser with sample data. The camera window shows a placeholder here.</sub>
+
 ## Install
 
 Download `drivedeck.apk` from the **Releases** page (tags starting with `dd-v`), open it, and allow installs from unknown sources.
