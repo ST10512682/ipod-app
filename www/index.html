@@ -72,6 +72,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
 .cap b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cap span{display:block;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bk{display:block;width:100%;height:calc(var(--W)*.525)}
+.hint{font-size:.62em;opacity:.45;text-align:center;margin-top:-2px}
 .np{padding:calc(var(--W)*.04) 10px;display:flex;flex-direction:column;gap:calc(var(--W)*.03)}
 .tp{display:flex;gap:10px;align-items:center}
 .art{flex:none;width:calc(var(--W)*.3);height:calc(var(--W)*.3);border-radius:3px;background:#8884 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:2.4em;opacity:.9;box-shadow:0 1px 4px #0006}
@@ -88,7 +89,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
 .wheel .l{left:3%;top:32%;width:26%;height:36%}.wheel .r{right:3%;top:32%;width:26%;height:36%}
 .wheel .c{left:32%;top:32%;width:36%;height:36%;border-radius:50%;background:linear-gradient(var(--c1),var(--c2));box-shadow:inset 0 0 0 1px var(--edge)}
 .wheel .c:active{opacity:1;filter:brightness(.9)}
-#pick,#pickBg,#pickStk,#pickRom{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
+#pick,#pickBg,#pickStk,#pickRom,#pickCover{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
 </style></head><body>
 <div class="ipod">
  <div class="screen"><div class="lcd"><div class="bar" id="title">aPod</div><label for="pick" class="add">+</label><div id="list"></div></div></div>
@@ -112,13 +113,14 @@ body{display:flex;align-items:center;justify-content:center;font-family:-apple-s
  <div class="gbar"><button id="gsave">Save state</button><button id="gload">Load state</button></div>
 </div>
 <input type="file" id="pickRom" accept=".gba,.gbc,.gb,.zip,.7z,application/zip,application/octet-stream">
+<input type="file" id="pickCover" accept="image/*">
 <input type="file" id="pickBg" accept="image/*">
 <input type="file" id="pickStk" accept="image/*" multiple>
 <audio id="au" playsinline></audio>
 <script>
 const $=id=>document.getElementById(id),au=$('au');
 const THEMES=[['classic','Classic White'],['black','Black'],['u2','U2 Red'],['pink','Pink'],['blue','Blue'],['night','Night'],['glass','Glass']];
-let songs=[],cur=-1,stack=['main'],idx={main:0,songs:0,settings:0,themes:0,cf:0,games:0,music:0},cfl=[],queue=null,pls=[],plIds=[],plTitle='',albIds=[],albTitle='',cfMode='albums',stks=[],stkSel=-1,shuffle=false,theme='classic',lastDrag=0;
+let songs=[],cur=-1,stack=['main'],idx={main:0,songs:0,settings:0,themes:0,cf:0,games:0,music:0,cover:0},cfl=[],queue=null,pls=[],plIds=[],plTitle='',albIds=[],albTitle='',cfMode='albums',stks=[],stkSel=-1,shuffle=false,theme='classic',lastDrag=0;
 const fname=f=>f.name.replace(/\.[^.]+$/,'');
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function setTheme(t){theme=t;document.documentElement.dataset.t=t;try{localStorage.setItem('t',t)}catch(e){}}
@@ -133,7 +135,8 @@ function items(s){
  if(s==='playlists')return pls.length?pls.map(p=>p.name+' ('+resolvePl(p).length+')'):['No playlists - add .m3u'];
  if(s==='plsongs')return plIds.length?plIds.map(i=>songs[i].title||songs[i].n):['No matching songs'];
  if(s==='album')return albIds.map(i=>songs[i].title||songs[i].n);
- if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick','GBA'];if(s==='music')return['Songs','Playlists','Shuffle','Add Music'];return[]}
+ if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick','GBA'];if(s==='music')return['Songs','Playlists','Shuffle','Add Music'];
+ if(s==='cover'){const t=songs[cur];if(!t)return['Nothing playing'];const r=['Choose Image (this song)'];if(t.album)r.push('Choose Image (whole album)');if(coverGroup().some(i=>songs[i].cart))r.push('Reset Cover');return r}return[]}
 function mark(s,i){if(['main','settings','music','games','bgmenu','stkmenu','playlists'].includes(s))return'\u203A';if(s==='songs')return i===cur?'\u266B':'';if(s==='album')return albIds[i]===cur?'\u266B':'';if(s==='plsongs')return plIds[i]===cur?'\u266B':'';if(s==='themes')return THEMES[i][0]===theme?'\u2713':'';return''}
 function openCF(){if(songs.length){cfl=albums();idx.cf=curAlbum();stack.push('cf')}}
 function albums(){const tr=x=>x.track||0,ttl=x=>x.title||x.n;
@@ -158,8 +161,8 @@ function render(){const s=scr(),L=$('list');syncStk();
  if(s==='cf'){$('title').textContent='Album Flow';renderCF();return}
  if(s==='brick'){$('title').textContent='Brick';renderBrick();return}
  if(s==='np'){const t=songs[cur];$('title').textContent=(au.paused?'\u275A\u275A':'\u25B6')+' Now Playing';
-  L.innerHTML=t?`<div class="np"><div class="tp"><div class="art"${t.art?` style="background-image:url('${t.art}')"`:''}>${t.art?'':'\u266B'}</div><div class="meta"><b>${esc(t.title||t.n)}</b><span>${esc(t.artist||'')}</span><span>${esc(t.album||'')}</span></div></div><div class="prog"><i id="pb"></i></div><div class="times"><span id="t1">0:00</span><span id="t2">-0:00</span></div></div>`:'<div class="np">Nothing playing</div>';tick();return}
- $('title').textContent={main:'aPod',music:'Music',games:'Games',songs:'Songs',settings:'Settings v1.9',themes:'Theme',bgmenu:'Background',stkmenu:'Stickers',playlists:'Playlists',plsongs:plTitle,album:albTitle}[s];
+  L.innerHTML=t?`<div class="np"><div class="tp"><div class="art"${t.art?` style="background-image:url('${t.art}')"`:''}>${t.art?'':'\u266B'}</div><div class="meta"><b>${esc(t.title||t.n)}</b><span>${esc(t.artist||'')}</span><span>${esc(t.album||'')}</span></div></div><div class="prog"><i id="pb"></i></div><div class="times"><span id="t1">0:00</span><span id="t2">-0:00</span></div><div class="hint">Press center for cover art</div></div>`:'<div class="np">Nothing playing</div>';tick();return}
+ $('title').textContent={main:'aPod',cover:'Cover Art',music:'Music',games:'Games',songs:'Songs',settings:'Settings v1.10',themes:'Theme',bgmenu:'Background',stkmenu:'Stickers',playlists:'Playlists',plsongs:plTitle,album:albTitle}[s];
  const it=items(s),i=idx[s]||0,st=Math.max(0,Math.min(i-3,it.length-6));
  L.innerHTML=it.slice(st,st+6).map((x,k)=>`<div class="row${st+k===i?' sel':''}" data-i="${st+k}"><span>${esc(x)}</span><span>${mark(s,st+k)}</span></div>`).join('')}
 const fmt=t=>{t=Math.max(0,t|0);return(t/60|0)+':'+String(t%60).padStart(2,'0')};
@@ -191,6 +194,8 @@ function select(){const s=scr(),i=idx[s]||0;
  else if(s==='bgmenu'){if(i===0)$('pickBg').click();else removeBg()}
  else if(s==='stkmenu'){if(i===0)$('pickStk').click();else if(i===1){if(stks.length)stack.push('stk')}else if(confirm('Remove all stickers?')){clearStk();stack.pop()}}
  else if(s==='music'){if(i===0)stack.push('songs');else if(i===1)stack.push('playlists');else if(i===2){if(songs.length){queue=null;shuffle=true;play(Math.random()*songs.length|0);stack.push('np')}}else $('pick').click()}
+ else if(s==='np'){if(songs[cur]){idx.cover=0;stack.push('cover')}}
+ else if(s==='cover'){const it=items('cover')[i]||'';if(it.indexOf('this song')>0){coverIds=[cur];$('pickCover').click()}else if(it.indexOf('whole album')>0){coverIds=coverGroup();$('pickCover').click()}else if(it==='Reset Cover')resetCover()}
  else if(s==='games'){if(i===0)stack.push('brick');else gbaOpen()}
  else if(s==='brick')bkAct();
  else if(s==='themes')setTheme(THEMES[i][0]);
@@ -292,7 +297,7 @@ async function readTags(f){const o={};try{
    if(e===0||e===3){while(i<d.length&&d[i]!==0)i++;i++}else{while(i+1<d.length&&!(d[i]===0&&d[i+1]===0))i+=2;i+=2}
    const img=d.subarray(i);if(img.length>100)o.art=new Blob([img],{type:img[0]===0x89?'image/png':'image/jpeg'})}}
 }catch(e){}return o}
-const mk=r=>({n:r.n,title:r.title,artist:r.artist,album:r.album,track:r.track||0,u:URL.createObjectURL(r.b),art:r.art?URL.createObjectURL(r.art):''});
+const mk=r=>{const a0=r.art?URL.createObjectURL(r.art):'';return{id:r.id,n:r.n,title:r.title,artist:r.artist,album:r.album,track:r.track||0,u:URL.createObjectURL(r.b),art0:a0,cart:!!r.cart,art:r.cart?URL.createObjectURL(r.cart):a0}};
 const seen=new Set();
 const keys=r=>[r.b.size+'|'+r.n.toLowerCase(),(r.title&&r.artist)?(r.title+'|'+r.artist+'|'+(r.album||'')).toLowerCase():''].filter(Boolean);
 const isDupe=r=>keys(r).some(k=>seen.has(k)),remember=r=>keys(r).forEach(k=>seen.add(k));
@@ -304,6 +309,13 @@ async function loadLib(){try{const a=await rq((await store('readonly')).getAll()
 async function addSong(f){const r=Object.assign({n:fname(f),b:f,tagged:2},await readTags(f));if(isDupe(r))return 0;remember(r);
  try{r.id=await rq((await store('readwrite')).add(r))}catch(e){}songs.push(mk(r));return 1}
 async function clearLib(){seen.clear();pls=[];queue=null;try{await rq((await store('readwrite')).clear());await rq((await store('readwrite','playlists')).clear())}catch(e){}au.pause();au.removeAttribute('src');songs=[];cur=-1;idx.songs=0;stack=['main'];render()}
+// custom cover art
+let coverIds=[];
+function coverGroup(){const t=songs[cur];if(!t)return[];return songs.map((_,i)=>i).filter(i=>songs[i]===t||(t.album&&songs[i].album===t.album&&(songs[i].artist||'')===(t.artist||'')))}
+async function putRec(id,fn){try{const st=await store('readwrite'),r=await rq(st.get(id));if(r){fn(r);await rq(st.put(r))}}catch(e){}}
+async function setCover(blob){for(const i of coverIds){const x=songs[i];if(!x)continue;if(x.id!=null)await putRec(x.id,r=>{r.cart=blob});if(x.cart&&x.art!==x.art0)URL.revokeObjectURL(x.art);x.art=URL.createObjectURL(blob);x.cart=true}if(songs[cur])media(songs[cur])}
+async function resetCover(){for(const i of coverGroup()){const x=songs[i];if(!x.cart)continue;if(x.id!=null)await putRec(x.id,r=>{delete r.cart});if(x.art!==x.art0)URL.revokeObjectURL(x.art);x.art=x.art0;x.cart=false}if(songs[cur])media(songs[cur]);stack.pop();render()}
+$('pickCover').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f||!coverIds.length)return;const b=await shrink(f,800,false);await setCover(b);if(scr()==='cover')stack.pop();render()};
 // playlists
 const norm=t=>String(t||'').toLowerCase().replace(/\.[^.\s]+$/,'').replace(/[^a-z0-9]+/g,' ').trim();
 async function parsePl(f){const t=await f.text(),ext=f.name.split('.').pop().toLowerCase(),out=[];
