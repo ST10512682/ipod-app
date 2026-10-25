@@ -63,7 +63,7 @@ Install [AltStore](https://altstore.io/), then open `apod.ipa` with AltStore on 
 ## Using the app
 
 ### Adding music
-- Tap the **+** at the top right of the screen, or go to **Add Songs** in the menu, and pick audio files (MP3, M4A, AAC, WAV, FLAC).
+- Tap the **+** at the top right of the screen, or go to **Music > Add Music**, and pick audio files (MP3, M4A, AAC, WAV, FLAC).
 - **iPhone:** save your music to the **Files** app first, because that's where the picker looks.
 - Cover art, title, artist, album and track number are read from MP3 tags.
 - Duplicates are skipped automatically, and existing ones are cleaned up on launch.
@@ -79,7 +79,8 @@ Install [AltStore](https://altstore.io/), then open `apod.ipa` with AltStore on 
 | Tap a row | Select it directly |
 
 ### Library
-- **Music > Songs, Playlists, Album Flow.** In Album Flow, press the center button on an album to see its tracks. Switch to one-cover-per-song in **Settings > Album Flow**.
+- **Album Flow** is on the main menu. Press the center button on an album to see its tracks. Switch to one cover per song in **Settings > Album Flow**.
+- **Music** has Songs, Playlists, Shuffle and Add Music.
 - **Playlists:** add `.m3u`, `.m3u8` or `.pls` files the same way as songs. Entries are matched to your songs by file name or title, so add the songs and the playlist in any order.
 
 ### Customise (Settings)
