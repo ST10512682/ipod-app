@@ -125,15 +125,15 @@ function setTheme(t){theme=t;document.documentElement.dataset.t=t;try{localStora
 try{setTheme(localStorage.getItem('t')||'classic')}catch(e){setTheme('classic')}
 const scr=()=>stack[stack.length-1];
 function items(s){
- if(s==='main')return['Music','Album Flow','Now Playing','Shuffle Songs','Add Songs','Games','Settings'];
+ if(s==='main')return['Music','Album Flow','Now Playing','Games','Settings'];
  if(s==='songs')return songs.length?songs.map(x=>x.title||x.n):['No songs - tap + to add'];
- if(s==='settings')return['Theme','Background','Stickers','Album Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library','Version 1.8.1'];
- if(s==='bgmenu')return['Choose Image','Remove Background'];
+ if(s==='settings')return['Theme','Background','Stickers','Album Flow: '+(cfMode==='songs'?'Songs':'Albums'),'Clear Library'];
+ if(s==='bgmenu')return['Choose New Image','Remove Background'];
  if(s==='stkmenu')return['Add Sticker','Edit Stickers','Remove All'];
  if(s==='playlists')return pls.length?pls.map(p=>p.name+' ('+resolvePl(p).length+')'):['No playlists - add .m3u'];
  if(s==='plsongs')return plIds.length?plIds.map(i=>songs[i].title||songs[i].n):['No matching songs'];
  if(s==='album')return albIds.map(i=>songs[i].title||songs[i].n);
- if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick','GBA'];if(s==='music')return['Album Flow','Playlists','Songs'];return[]}
+ if(s==='themes')return THEMES.map(x=>x[1]);if(s==='cf')return cfl.map(x=>x.t);if(s==='games')return['Brick','GBA'];if(s==='music')return['Songs','Playlists','Shuffle','Add Music'];return[]}
 function mark(s,i){if(['main','settings','music','games','bgmenu','stkmenu','playlists'].includes(s))return'\u203A';if(s==='songs')return i===cur?'\u266B':'';if(s==='album')return albIds[i]===cur?'\u266B':'';if(s==='plsongs')return plIds[i]===cur?'\u266B':'';if(s==='themes')return THEMES[i][0]===theme?'\u2713':'';return''}
 function openCF(){if(songs.length){cfl=albums();idx.cf=curAlbum();stack.push('cf')}}
 function albums(){const tr=x=>x.track||0,ttl=x=>x.title||x.n;
@@ -159,7 +159,7 @@ function render(){const s=scr(),L=$('list');syncStk();
  if(s==='brick'){$('title').textContent='Brick';renderBrick();return}
  if(s==='np'){const t=songs[cur];$('title').textContent=(au.paused?'\u275A\u275A':'\u25B6')+' Now Playing';
   L.innerHTML=t?`<div class="np"><div class="tp"><div class="art"${t.art?` style="background-image:url('${t.art}')"`:''}>${t.art?'':'\u266B'}</div><div class="meta"><b>${esc(t.title||t.n)}</b><span>${esc(t.artist||'')}</span><span>${esc(t.album||'')}</span></div></div><div class="prog"><i id="pb"></i></div><div class="times"><span id="t1">0:00</span><span id="t2">-0:00</span></div></div>`:'<div class="np">Nothing playing</div>';tick();return}
- $('title').textContent={main:'aPod',music:'Music',games:'Games',songs:'Songs',settings:'Settings',themes:'Theme',bgmenu:'Background',stkmenu:'Stickers',playlists:'Playlists',plsongs:plTitle,album:albTitle}[s];
+ $('title').textContent={main:'aPod',music:'Music',games:'Games',songs:'Songs',settings:'Settings v1.9',themes:'Theme',bgmenu:'Background',stkmenu:'Stickers',playlists:'Playlists',plsongs:plTitle,album:albTitle}[s];
  const it=items(s),i=idx[s]||0,st=Math.max(0,Math.min(i-3,it.length-6));
  L.innerHTML=it.slice(st,st+6).map((x,k)=>`<div class="row${st+k===i?' sel':''}" data-i="${st+k}"><span>${esc(x)}</span><span>${mark(s,st+k)}</span></div>`).join('')}
 const fmt=t=>{t=Math.max(0,t|0);return(t/60|0)+':'+String(t%60).padStart(2,'0')};
@@ -180,19 +180,17 @@ function select(){const s=scr(),i=idx[s]||0;
   if(m==='Music')stack.push('music');
   else if(m==='Album Flow')openCF();
   else if(m==='Now Playing')stack.push('np');
-  else if(m==='Shuffle Songs'){if(songs.length){queue=null;shuffle=true;play(Math.random()*songs.length|0);stack.push('np')}}
-  else if(m==='Add Songs')$('pick').click();
   else if(m==='Games')stack.push('games');
   else stack.push('settings')}
  else if(s==='songs'){if(songs.length){queue=null;shuffle=false;play(i);stack.push('np')}else $('pick').click()}
- else if(s==='settings'){if(i===0)stack.push('themes');else if(i===1)stack.push('bgmenu');else if(i===2)stack.push('stkmenu');else if(i===3){cfMode=cfMode==='songs'?'albums':'songs';try{localStorage.setItem('cfm',cfMode)}catch(e){}}else if(i===4&&confirm('Delete all saved songs and playlists?'))clearLib()}
+ else if(s==='settings'){if(i===0)stack.push('themes');else if(i===1){if(document.documentElement.classList.contains('hasbg'))stack.push('bgmenu');else $('pickBg').click()}else if(i===2){if(stks.length)stack.push('stkmenu');else $('pickStk').click()}else if(i===3){cfMode=cfMode==='songs'?'albums':'songs';try{localStorage.setItem('cfm',cfMode)}catch(e){}}else if(i===4&&confirm('Delete all saved songs and playlists?'))clearLib()}
  else if(s==='cf'){const c=cfl[i];if(c){if(c.ids.length>1){albIds=c.ids;albTitle=c.t;idx.album=0;stack.push('album')}else{queue=cfMode==='songs'?cfl.map(x=>x.i):null;shuffle=false;play(c.i);stack.push('np')}}}
  else if(s==='album'){queue=albIds;shuffle=false;play(albIds[i]);stack.push('np')}
  else if(s==='playlists'){if(pls.length){plIds=resolvePl(pls[i]);plTitle=pls[i].name;idx.plsongs=0;stack.push('plsongs')}}
  else if(s==='plsongs'){if(plIds.length){queue=plIds;shuffle=false;play(plIds[i]);stack.push('np')}}
  else if(s==='bgmenu'){if(i===0)$('pickBg').click();else removeBg()}
- else if(s==='stkmenu'){if(i===0)$('pickStk').click();else if(i===1){if(stks.length)stack.push('stk')}else if(confirm('Remove all stickers?'))clearStk()}
- else if(s==='music'){if(i===0)openCF();else if(i===1)stack.push('playlists');else stack.push('songs')}
+ else if(s==='stkmenu'){if(i===0)$('pickStk').click();else if(i===1){if(stks.length)stack.push('stk')}else if(confirm('Remove all stickers?')){clearStk();stack.pop()}}
+ else if(s==='music'){if(i===0)stack.push('songs');else if(i===1)stack.push('playlists');else if(i===2){if(songs.length){queue=null;shuffle=true;play(Math.random()*songs.length|0);stack.push('np')}}else $('pick').click()}
  else if(s==='games'){if(i===0)stack.push('brick');else gbaOpen()}
  else if(s==='brick')bkAct();
  else if(s==='themes')setTheme(THEMES[i][0]);
