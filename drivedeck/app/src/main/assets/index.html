@@ -65,7 +65,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:transparent;color:var(
 .flash{animation:fl .4s steps(2) 4}
 @keyframes fl{50%{filter:brightness(2.2)}}
 /* panels */
-.panel{position:absolute;inset:3vh 4vw;background:rgba(16,17,19,.97);border:1px solid var(--lampd);border-radius:2vh;box-shadow:0 0 0 .5vh #000,0 2vh 6vh #000;display:none;flex-direction:column;z-index:50}
+.panel{position:absolute;inset:3vh 4vw;background:#101113;border:1px solid var(--lampd);border-radius:2vh;box-shadow:0 0 0 .5vh #000,0 2vh 6vh #000;display:none;flex-direction:column;z-index:50}
 .panel.open{display:flex}
 .ph{display:flex;justify-content:space-between;align-items:center;padding:1.6vh 2vw;border-bottom:1px solid var(--lampd);font-size:2.8vh;letter-spacing:.2em}
 .ph button{background:#2b2c30;color:#fff;border:0;border-radius:1.2vh;font:inherit;font-size:2.6vh;padding:1vh 2vw}
@@ -195,7 +195,7 @@ $('bLib').onclick=()=>{A.rescan();const t=J(()=>A.tracks(),[]);
  const p=$('perm');if(p)p.onclick=()=>A.requestPerms()};
 $('pbody').addEventListener('click',e=>{const it=e.target.closest('.item[data-i]');if(it){A.play(+it.dataset.i);panel.classList.remove('open')}});
 function clipsPanel(){const c=J(()=>A.clips(),[]);
- open('CLIPS ('+c.length+')',c.length?c.map(x=>{const d=new Date(x.time);return '<div class="item" data-n="'+esc(x.name)+'"><span class="t">'+(x.locked?'<span class="lk">\uD83D\uDD12 </span>':'')+esc(d.toLocaleDateString()+' '+d.toLocaleTimeString().slice(0,5))+'</span><span class="m">'+Math.round(x.size/1048576)+' MB</span><button data-a="v">\u25B6</button><button data-a="l">'+(x.locked?'UNLOCK':'LOCK')+'</button><button data-a="s">SAVE</button><button data-a="d">DEL</button></div>'}).join(''):'<div class="note">No clips yet. Tap REC to start loop recording.<br>Clips are stored in this app\'s Movies/DriveDeck folder. SAVE copies one to your gallery.</div>')}
+ open('CLIPS ('+c.length+')',c.length?c.map(x=>{const d=new Date(x.time);return '<div class="item" data-n="'+esc(x.name)+'"><span class="t">'+(x.locked?'<span class="lk">\uD83D\uDD12 </span>':'')+esc(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'  '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'))+'</span><span class="m">'+Math.round(x.size/1048576)+' MB</span><button data-a="v">\u25B6</button><button data-a="l">'+(x.locked?'UNLOCK':'LOCK')+'</button><button data-a="s">SAVE</button><button data-a="d">DEL</button></div>'}).join(''):'<div class="note">No clips yet. Tap REC to start loop recording.<br>Clips are stored in this app\'s Movies/DriveDeck folder. SAVE copies one to your gallery.</div>')}
 $('bClips').onclick=clipsPanel;
 $('pbody').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const n=b.closest('.item').dataset.n,a=b.dataset.a;
  if(a==='v')A.openClip(n);
