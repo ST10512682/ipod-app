@@ -86,6 +86,7 @@ Install [AltStore](https://altstore.io/), then open `apod.ipa` with AltStore on 
 ### Customise (Settings)
 - **Theme:** six looks, including Glass.
 - **Background:** pick any image from your phone.
+- **Cover art:** art embedded in your MP3s shows automatically. To use your own, play a song, press the **center button** on Now Playing, and choose an image for **this song** or the **whole album**. **Reset Cover** brings the original back.
 - **Stickers:** add images (transparent PNGs work best), drag to move, pinch or spin the wheel to resize, double-tap to remove.
 
 ### Games
