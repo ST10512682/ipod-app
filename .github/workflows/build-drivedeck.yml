@@ -1,6 +1,7 @@
 name: Build DriveDeck
 on:
   push:
+    branches: ['**']
     paths:
       - 'drivedeck/**'
       - '.github/workflows/build-drivedeck.yml'
