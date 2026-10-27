@@ -78,6 +78,35 @@ class Bridge(private val a: MainActivity) {
     @JavascriptInterface fun seek(ms: Int) { a.runOnUiThread { MusicPlayer.seek(ms) } }
     @JavascriptInterface fun setVol(v: Double) { a.runOnUiThread { MusicPlayer.changeVol(v.toFloat()) } }
     @JavascriptInterface fun fft(): String = MusicPlayer.fft()
+    @JavascriptInterface fun playStream(url: String, name: String) { a.runOnUiThread { MusicPlayer.playStream(url, name) } }
+    @JavascriptInterface fun stopStream() { a.runOnUiThread { MusicPlayer.stopRadio() } }
+
+    // radio station directory (only radio-browser.info is allowed)
+    @JavascriptInterface
+    fun fetchAsync(url: String, id: Int) {
+        val host = try { java.net.URL(url).host } catch (e: Exception) { "" }
+        if (!host.endsWith("radio-browser.info")) {
+            reply(id, "")
+            return
+        }
+        Thread {
+            var body = ""
+            try {
+                val c = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                c.connectTimeout = 8000
+                c.readTimeout = 8000
+                c.setRequestProperty("User-Agent", "DriveDeck/0.2")
+                if (c.responseCode == 200) body = c.inputStream.bufferedReader().use { it.readText() }
+                c.disconnect()
+            } catch (e: Exception) { }
+            reply(id, body)
+        }.start()
+    }
+
+    private fun reply(id: Int, body: String) {
+        val js = "window.onFetch&&onFetch(" + id + "," + JSONObject.quote(body) + ")"
+        a.runOnUiThread { a.evalJs(js) }
+    }
 
     // ---- clips ----
     @JavascriptInterface
