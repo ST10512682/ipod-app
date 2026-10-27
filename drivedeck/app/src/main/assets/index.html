@@ -7,6 +7,8 @@
 html[data-lamp=green]{--lamp:#62ff80;--lampd:#1c6b2c}
 html[data-lamp=ice]{--lamp:#86dcff;--lampd:#1b566e}
 html[data-lamp=red]{--lamp:#ff6450;--lampd:#6e2218}
+html[data-lamp=cyan]{--lamp:#3fe9ff;--lampd:#0f5360}
+html[data-lamp=blue]{--lamp:#5b8cff;--lampd:#1d3677}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;height:100%;overflow:hidden;background:transparent;color:var(--lamp);font-family:"Courier New",Courier,monospace;touch-action:manipulation}
 .bg{position:absolute;inset:0;background:radial-gradient(120% 90% at 30% 0%,#50535a,#292b30 55%,#141517);
@@ -60,8 +62,20 @@ html,body{margin:0;height:100%;overflow:hidden;background:transparent;color:var(
 .btn:active,.btn.on{background:linear-gradient(#2a2b2f,#3f4147);box-shadow:inset 0 .4vh 1vh #000,0 0 0 .3vh #0b0b0c;transform:translateY(.2vh)}
 .btn.lamp{color:var(--lamp);text-shadow:0 0 1vh var(--lamp)}
 .btn.rec{color:#ff6a5e}
-.btn .dot{width:1vh;height:1vh;border-radius:50%;background:#2c2c2e}
-.btn .dot.set{background:var(--lamp);box-shadow:0 0 .8vh var(--lamp)}
+.btn .pled{display:block;width:62%;height:.8vh;border-radius:1vh;background:#12301a;margin-top:.2vh}
+.btn .pled.set{background:#43ff6a;box-shadow:0 0 .9vh #43ff6a;opacity:.55}
+.btn .pled.act{opacity:1;animation:pl 1.4s ease-in-out infinite}
+@keyframes pl{50%{box-shadow:0 0 1.8vh #43ff6a;filter:brightness(1.4)}}
+.knob{--bass:0}
+.knob::before{content:"";position:absolute;inset:-2.2%;border-radius:50%;border:.55vh solid var(--lamp);box-shadow:0 0 calc(1vh + var(--bass)*3vh) var(--lamp),inset 0 0 calc(.6vh + var(--bass)*1.6vh) var(--lamp);opacity:calc(.5 + var(--bass)*.5);pointer-events:none}
+.disp::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);pointer-events:none;z-index:2}
+.needle.tuning{transition:left .9s cubic-bezier(.45,.05,.2,1)}
+.chips{display:flex;flex-wrap:wrap;gap:.8vw;padding:.4vh 0 1.2vh}
+.chips button{background:#2b2c30;color:#ddd;border:0;border-radius:1vh;font:inherit;font-size:2.1vh;padding:1vh 1.4vw}
+.chips button.on{background:var(--lamp);color:#111;font-weight:700}
+.srch{display:flex;gap:.8vw;padding:.8vh 0}
+.srch input{flex:1;min-width:0;background:#0a0b0c;border:1px solid var(--lampd);color:#fff;border-radius:1vh;padding:1.1vh 1vw;font:inherit;font-size:2.4vh;-webkit-user-select:text;user-select:text}
+.srch button{background:#2b2c30;color:#fff;border:0;border-radius:1vh;font:inherit;font-size:2.3vh;padding:1vh 1.6vw}
 .flash{animation:fl .4s steps(2) 4}
 @keyframes fl{50%{filter:brightness(2.2)}}
 /* panels */
@@ -111,6 +125,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:transparent;color:var(
     </div>
     <div class="sep"></div>
     <div class="grp">
+      <button class="btn" id="bSrc">&#128251;<small>MUSIC</small></button>
       <button class="btn" id="bLock">&#128274;<small>LOCK</small></button>
       <button class="btn rec" id="bRec">&#9679;<small>REC</small></button>
       <button class="btn" id="bLib">&#9835;<small>LIB</small></button>
@@ -140,59 +155,107 @@ function drag(e){const r=knob.getBoundingClientRect();let a=Math.atan2(e.clientY
 knob.addEventListener('pointerdown',e=>{dragging=true;knob.setPointerCapture(e.pointerId);drag(e)});
 knob.addEventListener('pointermove',e=>{if(dragging)drag(e)});
 knob.addEventListener('pointerup',()=>dragging=false);knob.addEventListener('pointercancel',()=>dragging=false);
-/* presets: tap = play, hold = store current song */
+/* source + presets (hold a preset to store the current song or station) */
+let src=localStorage.getItem('src')==='radio'?'radio':'music';
+let favs=[];try{favs=JSON.parse(localStorage.getItem('favs')||'[]')}catch(e){}
+let curUrl='',curName='',curMeta='',tuneUntil=0,needlePos=.5,alertUntil=0,lastImpact=0;
+const pkey=n=>(src==='radio'?'r':'p')+n;
 const pre=$('presets');
-for(let n=1;n<=6;n++){const b=document.createElement('button');b.className='btn';b.innerHTML='<span class="dot" id="pd'+n+'"></span>'+n+'<small>PRESET</small>';
+for(let n=1;n<=6;n++){const b=document.createElement('button');b.className='btn';b.innerHTML='<span>'+n+'</span><small>PRESET</small><i class="pled" id="pd'+n+'"></i>';
  let timer=0,held=false;
- b.addEventListener('pointerdown',()=>{held=false;timer=setTimeout(()=>{held=true;const id=st.music&&st.music.id;if(id>0){localStorage.setItem('p'+n,id);b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),1700);marks()}},700)});
- b.addEventListener('pointerup',()=>{clearTimeout(timer);if(!held){const id=+localStorage.getItem('p'+n);if(id)A.playId(id)}});
+ b.addEventListener('pointerdown',()=>{held=false;timer=setTimeout(()=>{held=true;
+  if(src==='radio'){if(curUrl)localStorage.setItem(pkey(n),JSON.stringify({n:curName,u:curUrl,m:curMeta}))}
+  else{const id=st.music&&st.music.id;if(id>0)localStorage.setItem(pkey(n),id)}
+  b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),1700);marks()},700)});
+ b.addEventListener('pointerup',()=>{clearTimeout(timer);if(held)return;const v=localStorage.getItem(pkey(n));if(!v)return;
+  if(src==='radio'){try{tune(JSON.parse(v))}catch(e){}}else A.playId(+v)});
  b.addEventListener('pointercancel',()=>clearTimeout(timer));pre.appendChild(b)}
-function marks(){for(let n=1;n<=6;n++)$('pd'+n).classList.toggle('set',!!localStorage.getItem('p'+n))}
+function activePreset(){const m=st.music||{};for(let n=1;n<=6;n++){const v=localStorage.getItem(pkey(n));if(!v)continue;
+ if(src==='radio'){try{if(curUrl&&JSON.parse(v).u===curUrl)return n}catch(e){}}else if(+v===m.id&&m.playing)return n}return 0}
+function marks(){const act=activePreset();for(let n=1;n<=6;n++){const e=$('pd'+n);e.classList.toggle('set',!!localStorage.getItem(pkey(n)));e.classList.toggle('act',n===act)}}
+/* radio tuning */
+function chPos(s){let h=0;const k=(s.n||'')+(s.u||'');for(let i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))|0;return (Math.abs(h)%1000)/1000}
+function tune(s){if(!s||!s.u)return;curUrl=s.u;curName=s.n||'STATION';curMeta=s.m||'';tuneUntil=Date.now()+1600;needlePos=chPos(s);
+ try{localStorage.setItem('last',JSON.stringify({n:curName,u:curUrl,m:curMeta}))}catch(e){}
+ A.playStream(s.u,curName);if(s.id)rb('/json/url/'+s.id,()=>{});marks();poll()}
+function radioList(){if(favs.length)return favs;const l=[];for(let n=1;n<=6;n++){try{const v=JSON.parse(localStorage.getItem('r'+n)||'null');if(v)l.push(v)}catch(e){}}return l}
+function step(d){const l=radioList();if(!l.length){openStations();return}let i=l.findIndex(x=>x.u===curUrl);i=i<0?0:(i+d+l.length)%l.length;tune(l[i])}
+function srcUi(){$('bSrc').querySelector('small').textContent=src==='radio'?'RADIO':'MUSIC';$('bLib').querySelector('small').textContent=src==='radio'?'STATIONS':'LIB';marks()}
 /* transport */
-$('bPlay').onclick=()=>A.toggle();$('bNext').onclick=()=>A.next();$('bPrev').onclick=()=>A.prev();
-$('bLock').onclick=()=>{A.lockNow();$('bLock').classList.add('flash');setTimeout(()=>$('bLock').classList.remove('flash'),1700)};
+$('bPlay').onclick=()=>{if(src==='radio'&&!curUrl){let l=null;try{l=JSON.parse(localStorage.getItem('last')||'null')}catch(e){}if(l)tune(l);else openStations();return}A.toggle()};
+$('bNext').onclick=()=>src==='radio'?step(1):A.next();
+$('bPrev').onclick=()=>src==='radio'?step(-1):A.prev();
+$('bSrc').onclick=()=>{src=src==='radio'?'music':'radio';localStorage.setItem('src',src);if(src==='music'){A.stopStream();curUrl=''}else if(st.music&&st.music.playing)A.toggle();tuneUntil=Date.now()+900;srcUi();poll()};
+$('bLock').onclick=()=>{A.lockNow();alertUntil=Date.now()+3000;$('bLock').classList.add('flash');setTimeout(()=>$('bLock').classList.remove('flash'),1700)};
 $('bRec').onclick=()=>{st.rec?A.stopRec():A.startRec()};
 /* state */
-function poll(){st=J(()=>A.state(),st);const m=st.music||{};
+function poll(){st=J(()=>A.state(),st);const m=st.music||{},radio=src==='radio',nd=$('needle');
  $('bPlay').firstChild.nodeValue=m.playing?'\u275A\u275A':'\u25B6';$('bPlay').querySelector('small').textContent=m.playing?'PAUSE':'PLAY';
- $('trk').textContent=m.count?('TRK '+String((m.idx|0)+1).padStart(2,'0')+'/'+String(m.count).padStart(2,'0')):'TRK --/--';
- const t=m.title||(m.count?'PRESS PLAY':'NO MUSIC FOUND');
+ let t,sub;
+ if(radio){t=curName||m.rname||'NO STATION';sub=m.rerr?'STREAM ERROR - TAP PLAY':(m.buffering?'BUFFERING...':(curMeta||'NET RADIO'));
+  $('trk').textContent=curUrl?('CH '+(88+needlePos*20).toFixed(1)):'NET RADIO';
+  nd.classList.toggle('tuning',Date.now()<tuneUntil);nd.style.left=(curUrl?needlePos*98.6:50)+'%';
+  ['88','93','98','103','108'].forEach((x,i)=>$('n'+i).textContent=x)}
+ else{t=m.title||(m.count?'PRESS PLAY':'NO MUSIC FOUND');sub=[m.artist,m.album].filter(Boolean).join(' - ');
+  $('trk').textContent=m.count&&m.idx>=0?('TRK '+String((m.idx|0)+1).padStart(2,'0')+'/'+String(m.count).padStart(2,'0')):'TRK --/--';
+  nd.classList.remove('tuning');const d=(m.dur||0)/1000;nd.style.left=(d?Math.min(99.4,(m.pos/1000)/d*100):0)+'%';
+  $('n0').textContent='0:00';[1,2,3,4].forEach(i=>$('n'+i).textContent=d?fmt(d*i/4):'')}
  if($('title').textContent!==t){$('title').textContent=t;const tb=$('titlebox');tb.classList.remove('scroll');setTimeout(()=>{if($('title').scrollWidth>tb.clientWidth)tb.classList.add('scroll')},50)}
- $('sub').textContent=[m.artist,m.album].filter(Boolean).join(' - ');
- const d=(m.dur||0)/1000;$('needle').style.left=(d?Math.min(99.4,(m.pos/1000)/d*100):0)+'%';
- [1,2,3,4].forEach(i=>$('n'+i).textContent=d?fmt(d*i/4):'');
+ $('sub').textContent=sub;
  const now=new Date();$('clock').textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
  $('recind').textContent=st.rec?('\u25CF REC '+hms(st.secs)):'';
- const cw=$('camwrap');cw.classList.toggle('rec',!!st.rec);$('disp').parentNode.classList.toggle('rec',!!st.rec);
+ $('camwrap').classList.toggle('rec',!!st.rec);
  $('camst').textContent=st.rec?'REC':'STBY';$('bRec').querySelector('small').textContent=st.rec?'STOP':'REC';
  $('storage').textContent=(st.clips||0)+' CLIPS \u00B7 '+(st.locked||0)+' LOCKED';
  $('camtxt').textContent=st.cam===false?'CAMERA ACCESS NEEDED - TAP REC':(st.rec?'':'CAMERA OFF - TAP REC');
- if(st.impact&&st.impact!==lastImpact){lastImpact=st.impact;if(booted){$('bLock').classList.add('flash');setTimeout(()=>$('bLock').classList.remove('flash'),1700);$('recind').textContent='LOCKED'}}
-}
-let lastImpact=0;setInterval(poll,500);
+ if(st.impact&&st.impact!==lastImpact){lastImpact=st.impact;if(booted){alertUntil=Date.now()+3500;$('bLock').classList.add('flash');setTimeout(()=>$('bLock').classList.remove('flash'),1700);$('recind').textContent='LOCKED'}}
+ marks()}
+setInterval(poll,500);
 window.onNative=()=>{poll()};
-/* spectrum */
-const sp=$('spec'),peaks=new Array(24).fill(0),lev=new Array(24).fill(0);let tk=0,raw=[];
+/* display visuals: dot-matrix scenes + LED bars */
+const sp=$('spec'),peaks=new Array(24).fill(0),lev=new Array(24).fill(0),seeds=Array.from({length:96},()=>Math.random());
+let tk=0,raw=[],bassS=0,lampC='#3fe9ff',dimC='#0f5360',frame=0,flashUntil=0,sceneAt=Date.now(),sceneMode=localStorage.getItem('scene')||'auto';
+const bootT0=performance.now(),SC=['bars','wave','ripple','rain','tunnel'];
+function readLamp(){const cs=getComputedStyle(document.documentElement);lampC=cs.getPropertyValue('--lamp').trim()||lampC;dimC=cs.getPropertyValue('--lampd').trim()||dimC}
 setInterval(()=>{const s=A.fft();raw=s?s.split(',').map(Number):[]},60);
-function draw(){requestAnimationFrame(draw);const g=sp.getContext('2d'),W=sp.width,H=sp.height;g.clearRect(0,0,W,H);
- const cs=getComputedStyle(document.documentElement),lamp=cs.getPropertyValue('--lamp').trim(),dim=cs.getPropertyValue('--lampd').trim();
- const playing=st.music&&st.music.playing;tk++;
- const bw=W/24,segs=10,sh=H/segs;
- for(let i=0;i<24;i++){let v;
-  if(raw.length===24)v=raw[i]/255;else if(playing)v=.35+.3*Math.sin(tk/9+i*.7)+.25*Math.sin(tk/5.3+i*1.9);else v=0;
-  v=Math.max(0,Math.min(1,v));lev[i]+=(v-lev[i])*(v>lev[i]?.6:.15);if(lev[i]>peaks[i])peaks[i]=lev[i];else peaks[i]=Math.max(0,peaks[i]-.008);
+sp.addEventListener('click',()=>{const o=['auto',0,1,2,3,4],i=o.indexOf(sceneMode==='auto'?'auto':+sceneMode);sceneMode=o[(i+1)%o.length];localStorage.setItem('scene',sceneMode);flashUntil=Date.now()+1600;sceneAt=Date.now()});
+function curScene(){return sceneMode==='auto'?Math.floor((Date.now()-sceneAt)/22000)%SC.length:+sceneMode}
+function energy(){const play=st.music&&st.music.playing;let bands;
+ if(raw.length===24)bands=raw.map(v=>v/255);else bands=Array.from({length:24},(_,i)=>play?Math.max(0,Math.min(1,.35+.3*Math.sin(tk/9+i*.7)+.25*Math.sin(tk/5.3+i*1.9))):.05+.04*Math.sin(tk/30+i));
+ const av=(a,b)=>{let s=0;for(let i=a;i<b;i++)s+=bands[i];return s/(b-a)};return{bands,b:av(0,4),m:av(4,12),h:av(12,24)}}
+function dots(g,W,H,col,fn){const rows=14,cell=H/rows,cols=Math.max(8,Math.floor(W/cell));g.fillStyle=col;
+ for(let c=0;c<cols;c++)for(let r=0;r<rows;r++){const v=Math.max(0,Math.min(1,fn(c/cols,r/rows,c,r,cols/rows)));g.globalAlpha=.1+.9*v;g.beginPath();g.arc((c+.5)*cell,(r+.5)*cell,cell*(.12+.28*v),0,6.3);g.fill()}
+ g.globalAlpha=1}
+const SCENES={
+ wave:(E,t)=>(x,y)=>{const a=.5+.3*Math.sin(x*7+t*1.4)*(.5+E.m),b=.5+.26*Math.sin(x*11-t*1.9+1.3)*(.5+E.h);return Math.max(0,1-Math.abs(y-a)*7)*.95+Math.max(0,1-Math.abs(y-b)*8)*.7+E.b*.3*Math.max(0,1-Math.abs(y-.5)*2)},
+ ripple:(E,t)=>(x,y,c,r,asp)=>{const d=Math.hypot((x-.5)*asp,y-.5);return Math.pow(Math.max(0,Math.sin(d*14-t*3.2-E.b*5)),3)*(1-d*.45)},
+ rain:(E,t)=>(x,y,c)=>{const s=seeds[c%96],sp2=.25+s*.6+E.m*.7,hd=(t*sp2+s*9)%1.7,d=hd-y;if(d<0||d>.65)return 0;return (1-d/.65)*(.35+E.bands[c%24]*.9)},
+ tunnel:(E,t)=>(x,y,c,r,asp)=>{const dx=(x-.5)*asp,dy=y-.5,rr=Math.hypot(dx,dy)+.001,a=Math.atan2(dy,dx);return Math.max(0,Math.sin(10/(rr+.35)-t*4+E.b*3)*Math.cos(a*3+t))*.95*(1-rr*.35)},
+ stat:()=>()=>Math.random()<.32?Math.random():0};
+function bars(g,W,H,E,col){const segs=10,sh=H/segs,bw=W/24;
+ for(let i=0;i<24;i++){const v=E.bands[i];lev[i]+=(v-lev[i])*(v>lev[i]?.6:.15);if(lev[i]>peaks[i])peaks[i]=lev[i];else peaks[i]=Math.max(0,peaks[i]-.008);
   const n=Math.round(lev[i]*segs),pk=Math.round(peaks[i]*segs);
-  for(let s=0;s<segs;s++){const y=H-(s+1)*sh;g.fillStyle=(s<n)?(s>=segs-2?'#ff4a3a':lamp):dim;g.globalAlpha=(s<n)?1:.35;g.fillRect(i*bw+bw*.12,y+sh*.14,bw*.76,sh*.72)}
+  for(let s=0;s<segs;s++){const y=H-(s+1)*sh;g.fillStyle=(s<n)?(s>=segs-2?'#ff4a3a':col):dimC;g.globalAlpha=(s<n)?1:.35;g.fillRect(i*bw+bw*.12,y+sh*.14,bw*.76,sh*.72)}
   if(pk>0){const s=Math.min(segs-1,pk);g.globalAlpha=1;g.fillStyle='#fff';g.fillRect(i*bw+bw*.12,H-(s+1)*sh+sh*.14,bw*.76,sh*.3)}}
  g.globalAlpha=1}
+function draw(){requestAnimationFrame(draw);if(++frame%2)return;
+ const g=sp.getContext('2d'),W=sp.width,H=sp.height;if(!W||!H)return;g.clearRect(0,0,W,H);tk++;const t=performance.now()/1000;
+ const E=energy();bassS+=(E.b-bassS)*.35;$('knob').style.setProperty('--bass',bassS.toFixed(3));
+ const now=Date.now(),alt=now<alertUntil,tuning=now<tuneUntil,buf=src==='radio'&&st.music&&st.music.buffering;let col=lampC;
+ if(alt){col='#ff4a3a';dots(g,W,H,col,(x,y,c,r,asp)=>{const d=Math.hypot((x-.5)*asp,y-.5);return Math.pow(Math.max(0,Math.sin(d*10-t*9)),2)*(1.1-d*.5)})}
+ else if(tuning||buf){dots(g,W,H,col,SCENES.stat())}
+ else{const si=curScene();if(si===0)bars(g,W,H,E,col);else dots(g,W,H,col,SCENES[SC[si]](E,t))}
+ const bt=(performance.now()-bootT0)/1700;if(bt<1)dots(g,W,H,col,x=>Math.exp(-Math.abs(x-bt*1.1)*16)*1.2);
+ if(now<flashUntil||alt){g.globalAlpha=1;g.fillStyle=alt?'#ff4a3a':lampC;g.font='700 '+Math.round(H/9)+'px "Courier New",monospace';g.textBaseline='top';g.fillText(alt?'IMPACT LOCKED':'VISUAL: '+(sceneMode==='auto'?'AUTO':SC[+sceneMode].toUpperCase()),8,6)}}
 /* panels */
 const panel=$('panel');
 function open(title,html){$('ptitle').textContent=title;$('pbody').innerHTML=html;panel.classList.add('open')}
 $('pclose').onclick=()=>panel.classList.remove('open');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-$('bLib').onclick=()=>{A.rescan();const t=J(()=>A.tracks(),[]);
+function libPanel(){A.rescan();const t=J(()=>A.tracks(),[]);
  open('MUSIC LIBRARY',t.length?t.map(x=>'<div class="item" data-i="'+x.i+'"><span class="t">'+esc(x.t)+'</span><span class="m">'+esc(x.a)+'</span></div>').join(''):'<div class="note">No music found. Allow music access, then add songs to this phone.<br><br><button class="btn" id="perm" style="height:8vh;width:30vw">ALLOW ACCESS</button></div>');
- const p=$('perm');if(p)p.onclick=()=>A.requestPerms()};
+ const p=$('perm');if(p)p.onclick=()=>A.requestPerms()}
+$('bLib').onclick=()=>src==='radio'?openStations():libPanel();
 $('pbody').addEventListener('click',e=>{const it=e.target.closest('.item[data-i]');if(it){A.play(+it.dataset.i);panel.classList.remove('open')}});
 function clipsPanel(){const c=J(()=>A.clips(),[]);
  open('CLIPS ('+c.length+')',c.length?c.map(x=>{const d=new Date(x.time);return '<div class="item" data-n="'+esc(x.name)+'"><span class="t">'+(x.locked?'<span class="lk">\uD83D\uDD12 </span>':'')+esc(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'  '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'))+'</span><span class="m">'+Math.round(x.size/1048576)+' MB</span><button data-a="v">\u25B6</button><button data-a="l">'+(x.locked?'UNLOCK':'LOCK')+'</button><button data-a="s">SAVE</button><button data-a="d">DEL</button></div>'}).join(''):'<div class="note">No clips yet. Tap REC to start loop recording.<br>Clips are stored in this app\'s Movies/DriveDeck folder. SAVE copies one to your gallery.</div>')}
@@ -203,16 +266,39 @@ $('pbody').addEventListener('click',e=>{const b=e.target.closest('button[data-a]
  else if(a==='s'){b.textContent=A.exportClip(n)?'SAVED':'FAILED'}
  else if(a==='d'){if(b.classList.contains('warn')){A.deleteClip(n);clipsPanel()}else{b.classList.add('warn');b.textContent='SURE?';setTimeout(()=>{b.classList.remove('warn');b.textContent='DEL'},2200)}}});
 function seg(label,key,opts,cur,onset){return '<div class="opt"><label>'+label+'</label><div class="seg" data-k="'+key+'">'+opts.map(o=>'<button data-v="'+o[0]+'"'+(o[0]==cur?' class="on"':'')+'>'+o[1]+'</button>').join('')+'</div></div>'}
-function settingsPanel(){const s=J(()=>A.settings(),{seg:3,cap:4096,mic:0,sens:1,auto:1}),lamp=localStorage.getItem('lamp')||'amber';
- open('SETTINGS',seg('CLIP LENGTH','seg',[[1,'1 MIN'],[3,'3 MIN'],[5,'5 MIN']],s.seg)+seg('STORAGE CAP','cap',[[2048,'2 GB'],[4096,'4 GB'],[8192,'8 GB'],[16384,'16 GB']],s.cap)+seg('IMPACT SENSOR','sens',[[0,'LOW'],[1,'MEDIUM'],[2,'HIGH']],s.sens)+seg('MICROPHONE','mic',[[0,'OFF'],[1,'ON']],s.mic)+seg('AUTO-RECORD ON OPEN','auto',[[0,'OFF'],[1,'ON']],s.auto)+seg('BACKLIGHT','lamp',[['amber','AMBER'],['green','GREEN'],['ice','ICE'],['red','RED']],lamp)+
+function settingsPanel(){const s=J(()=>A.settings(),{seg:3,cap:4096,mic:0,sens:1,auto:1}),lamp=localStorage.getItem('lamp')||'cyan';
+ open('SETTINGS',seg('CLIP LENGTH','seg',[[1,'1 MIN'],[3,'3 MIN'],[5,'5 MIN']],s.seg)+seg('STORAGE CAP','cap',[[2048,'2 GB'],[4096,'4 GB'],[8192,'8 GB'],[16384,'16 GB']],s.cap)+seg('IMPACT SENSOR','sens',[[0,'LOW'],[1,'MEDIUM'],[2,'HIGH']],s.sens)+seg('MICROPHONE','mic',[[0,'OFF'],[1,'ON']],s.mic)+seg('AUTO-RECORD ON OPEN','auto',[[0,'OFF'],[1,'ON']],s.auto)+seg('BACKLIGHT','lamp',[['cyan','CYAN'],['blue','BLUE'],['amber','AMBER'],['green','GREEN'],['ice','ICE'],['red','RED']],lamp)+
  '<div class="note">Changes to clip length, microphone and sensor apply from the next recording. If you record audio, tell your passengers. Footage can contain personal information, so be careful before sharing it online. Only use the app while the phone is secured in a mount.</div>')}
 $('bSet').onclick=settingsPanel;
 $('pbody').addEventListener('click',e=>{const b=e.target.closest('.seg button');if(!b)return;const g=b.parentNode,k=g.dataset.k,v=b.dataset.v;
  g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
- if(k==='lamp'){localStorage.setItem('lamp',v);document.documentElement.dataset.lamp=v}else A.set(k,+v)});
+ if(k==='lamp'){localStorage.setItem('lamp',v);document.documentElement.dataset.lamp=v;readLamp()}else A.set(k,+v)});
+/* internet radio (station directory: radio-browser.info) */
+const fcb={};let fid=1;
+window.onFetch=(id,body)=>{const f=fcb[id];if(f){delete fcb[id];f(body)}};
+const RB=['https://de1.api.radio-browser.info','https://de2.api.radio-browser.info','https://fi1.api.radio-browser.info'];
+function rb(path,cb,i){i=i||0;if(i>=RB.length)return cb(null);const id=fid++;fcb[id]=body=>{if(!body)return rb(path,cb,i+1);try{cb(JSON.parse(body))}catch(e){rb(path,cb,i+1)}};A.fetchAsync(RB[i]+path,id)}
+const Q='&limit=40&hidebroken=true&order=clickcount&reverse=true';
+const TABS={fav:['MY STATIONS',''],top:['TOP','/json/stations/search?lastcheckok=1'+Q],za:['SOUTH AFRICA','/json/stations/search?countrycode=ZA'+Q],jazz:['JAZZ','/json/stations/search?tag=jazz'+Q],rock:['ROCK','/json/stations/search?tag=rock'+Q],pop:['POP','/json/stations/search?tag=pop'+Q],talk:['TALK','/json/stations/search?tag=talk'+Q]};
+let results=[],tab='fav';
+const isFav=u=>favs.some(f=>f.u===u),saveFavs=()=>localStorage.setItem('favs',JSON.stringify(favs));
+const norm=x=>({n:(x.name||'').trim()||'Station',u:x.url_resolved||x.url,m:[x.countrycode,x.codec,x.bitrate?x.bitrate+'K':''].filter(Boolean).join(' '),id:x.stationuuid});
+function stList(){const L=$('stlist');if(!L)return;const arr=tab==='fav'?favs:results;
+ L.innerHTML=arr.length?arr.map((x,i)=>'<div class="item" data-s="'+i+'"><span class="t">'+esc(x.n)+'</span><span class="m">'+esc(x.m||'')+'</span><button data-a="fav">'+(isFav(x.u)?'\u2605':'\u2606')+'</button></div>').join(''):'<div class="note">'+(tab==='fav'?'No saved stations yet. Pick a tab above, search, or add a link below, then tap the star to save one.':'Nothing found. Check that mobile data is on.')+'</div>'}
+function loadTab(t){tab=t;document.querySelectorAll('#chips button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+ if(t==='fav'){stList();return}$('stlist').innerHTML='<div class="note">Loading...</div>';rb(TABS[t][1],r=>{results=(r||[]).map(norm).filter(x=>x.u);stList()})}
+function openStations(){open('STATIONS','<div class="chips" id="chips">'+Object.keys(TABS).map(k=>'<button data-t="'+k+'">'+(k==='fav'?'\u2605 ':'')+TABS[k][0]+'</button>').join('')+'</div><div class="srch"><input id="q" placeholder="Search station name"><button id="qgo">SEARCH</button></div><div id="stlist"></div><div class="srch"><input id="uname" placeholder="Name"><input id="uurl" placeholder="Stream link (http://...)"><button id="uadd">ADD</button></div><div class="note">Internet radio needs mobile data. Real FM broadcasts are not available to apps on most phones.</div>');loadTab(favs.length?'fav':'top')}
+$('pbody').addEventListener('click',e=>{
+ const c=e.target.closest('#chips button');if(c){loadTab(c.dataset.t);return}
+ if(e.target.id==='qgo'){const q=$('q').value.trim();if(!q)return;tab='res';document.querySelectorAll('#chips button').forEach(b=>b.classList.remove('on'));$('stlist').innerHTML='<div class="note">Searching...</div>';rb('/json/stations/search?name='+encodeURIComponent(q)+Q,r=>{results=(r||[]).map(norm).filter(x=>x.u);stList()});return}
+ if(e.target.id==='uadd'){const u=$('uurl').value.trim();if(!/^https?:\/\//i.test(u))return;const n=$('uname').value.trim()||u.replace(/^https?:\/\//i,'').split('/')[0];if(!isFav(u)){favs.push({n,u,m:'CUSTOM'});saveFavs()}$('uurl').value='';$('uname').value='';loadTab('fav');return}
+ const it=e.target.closest('.item[data-s]');if(!it)return;const x=(tab==='fav'?favs:results)[+it.dataset.s];if(!x)return;
+ if(e.target.closest('button[data-a=fav]')){if(isFav(x.u))favs=favs.filter(f=>f.u!==x.u);else favs.push(x);saveFavs();stList();return}
+ src='radio';localStorage.setItem('src','radio');srcUi();tune(x);panel.classList.remove('open')});
+
 /* start up */
-document.documentElement.dataset.lamp=localStorage.getItem('lamp')||'amber';
-marks();setVol(volPct,true);
+document.documentElement.dataset.lamp=localStorage.getItem('lamp')||'cyan';
+readLamp();srcUi();setVol(volPct,true);
 setTimeout(layout,50);setTimeout(layout,600);
 $('needle').style.left='99%';setTimeout(()=>{$('needle').style.left='0%'},700);
 setTimeout(()=>{$('disp').classList.remove('boot');booted=true},1700);
