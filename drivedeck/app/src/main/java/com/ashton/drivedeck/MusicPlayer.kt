@@ -27,6 +27,14 @@ object MusicPlayer {
     private var errs = 0
     private var focusReq: AudioFocusRequest? = null
     private var pausedByFocus = false
+    private var prepared = false
+
+    // internet radio
+    private var radioMode = false
+    private var radioName = ""
+    private var radioUrl = ""
+    private var buffering = false
+    private var rerr = false
 
     fun init(c: Context) {
         app = c.applicationContext
@@ -68,14 +76,18 @@ object MusicPlayer {
             )
             .setOnAudioFocusChangeListener { ch ->
                 val m = mp
-                when (ch) {
-                    AudioManager.AUDIOFOCUS_LOSS -> { if (m != null && m.isPlaying) { m.pause(); pausedByFocus = false } }
-                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> { if (m != null && m.isPlaying) { m.pause(); pausedByFocus = true } }
-                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> m?.setVolume(vol * 0.25f, vol * 0.25f)
-                    AudioManager.AUDIOFOCUS_GAIN -> {
-                        m?.setVolume(vol, vol)
-                        if (pausedByFocus) { m?.start(); pausedByFocus = false }
-                    }
+                if (m != null && prepared) {
+                    try {
+                        when (ch) {
+                            AudioManager.AUDIOFOCUS_LOSS -> { if (m.isPlaying) { m.pause(); pausedByFocus = false } }
+                            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> { if (m.isPlaying) { m.pause(); pausedByFocus = true } }
+                            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> m.setVolume(vol * 0.25f, vol * 0.25f)
+                            AudioManager.AUDIOFOCUS_GAIN -> {
+                                m.setVolume(vol, vol)
+                                if (pausedByFocus) { m.start(); pausedByFocus = false }
+                            }
+                        }
+                    } catch (e: Exception) { }
                 }
             }.build()
         focusReq = req
@@ -87,20 +99,33 @@ object MusicPlayer {
         viz = null
         try { mp?.release() } catch (e: Exception) { }
         mp = null
+        prepared = false
     }
+
+    private fun attachViz(m: MediaPlayer) {
+        viz = try {
+            val v = Visualizer(m.audioSessionId)
+            v.setCaptureSize(Visualizer.getCaptureSizeRange()[0])
+            v.setEnabled(true)
+            v
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun attrs() = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
 
     fun play(i: Int) {
         val c = app ?: return
         if (i !in tracks.indices) return
         release()
+        radioMode = false
         val t = tracks[i]
         idx = i
         val m = MediaPlayer()
         try {
-            m.setAudioAttributes(
-                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
-            )
+            m.setAudioAttributes(attrs())
             m.setDataSource(c, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, t.id))
             m.setOnCompletionListener { next() }
             m.setOnErrorListener { _, _, _ ->
@@ -113,15 +138,9 @@ object MusicPlayer {
             focus(c)
             m.start()
             mp = m
+            prepared = true
             errs = 0
-            viz = try {
-                val v = Visualizer(m.audioSessionId)
-                v.setCaptureSize(Visualizer.getCaptureSizeRange()[0])
-                v.setEnabled(true)
-                v
-            } catch (e: Exception) {
-                null
-            }
+            attachViz(m)
         } catch (e: Exception) {
             try { m.release() } catch (x: Exception) { }
             mp = null
@@ -135,14 +154,75 @@ object MusicPlayer {
         if (i >= 0) play(i)
     }
 
+    fun playStream(url: String, name: String) {
+        val c = app ?: return
+        release()
+        idx = -1
+        radioMode = true
+        radioName = name
+        radioUrl = url
+        buffering = true
+        rerr = false
+        val m = MediaPlayer()
+        try {
+            m.setAudioAttributes(attrs())
+            m.setDataSource(url)
+            m.setOnPreparedListener { p ->
+                prepared = true
+                buffering = false
+                p.setVolume(vol, vol)
+                focus(c)
+                p.start()
+                attachViz(p)
+            }
+            m.setOnInfoListener { _, what, _ ->
+                if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) buffering = true
+                if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) buffering = false
+                false
+            }
+            m.setOnErrorListener { _, _, _ ->
+                rerr = true
+                buffering = false
+                true
+            }
+            m.setOnCompletionListener { rerr = true }
+            mp = m
+            m.prepareAsync()
+        } catch (e: Exception) {
+            try { m.release() } catch (x: Exception) { }
+            mp = null
+            rerr = true
+            buffering = false
+        }
+    }
+
+    fun stopRadio() {
+        if (radioMode) {
+            release()
+            radioMode = false
+            buffering = false
+            rerr = false
+        }
+    }
+
     fun toggle() {
         val m = mp
-        if (m == null) {
+        if (radioMode) {
+            if (m == null || rerr) {
+                if (radioUrl.isNotEmpty()) playStream(radioUrl, radioName)
+                return
+            }
+            if (!prepared) return
+            pausedByFocus = false
+            try { if (m.isPlaying) m.pause() else m.start() } catch (e: Exception) { }
+            return
+        }
+        if (m == null || !prepared) {
             if (tracks.isNotEmpty()) play(if (idx >= 0) idx else 0)
             return
         }
         pausedByFocus = false
-        if (m.isPlaying) m.pause() else m.start()
+        try { if (m.isPlaying) m.pause() else m.start() } catch (e: Exception) { }
     }
 
     fun next() {
@@ -153,26 +233,35 @@ object MusicPlayer {
     fun prev() {
         if (tracks.isEmpty()) return
         val m = mp
-        if (m != null && m.currentPosition > 3000) { m.seekTo(0); return }
+        if (m != null && prepared && m.currentPosition > 3000) { m.seekTo(0); return }
         play((idx - 1).mod(tracks.size))
     }
 
     fun seek(ms: Int) {
-        mp?.seekTo(ms)
+        if (prepared && !radioMode) mp?.seekTo(ms)
     }
 
     fun changeVol(v: Float) {
         vol = v.coerceIn(0f, 1f)
-        mp?.setVolume(vol, vol)
+        if (prepared) try { mp?.setVolume(vol, vol) } catch (e: Exception) { }
     }
 
     fun state(): JSONObject {
         val o = JSONObject()
         val m = mp
         val t = if (idx in tracks.indices) tracks[idx] else null
-        o.put("playing", m != null && m.isPlaying)
-        o.put("pos", if (m != null) m.currentPosition else 0)
-        o.put("dur", if (m != null) m.duration else 0)
+        var playing = false
+        var pos = 0
+        var dur = 0
+        if (m != null && prepared) {
+            try {
+                playing = m.isPlaying
+                if (!radioMode) { pos = m.currentPosition; dur = m.duration }
+            } catch (e: Exception) { }
+        }
+        o.put("playing", playing)
+        o.put("pos", pos)
+        o.put("dur", dur)
         o.put("idx", idx)
         o.put("id", t?.id ?: -1L)
         o.put("title", t?.title ?: "")
@@ -180,6 +269,10 @@ object MusicPlayer {
         o.put("album", t?.album ?: "")
         o.put("vol", vol.toDouble())
         o.put("count", tracks.size)
+        o.put("radio", radioMode)
+        o.put("rname", radioName)
+        o.put("buffering", buffering)
+        o.put("rerr", rerr)
         return o
     }
 
