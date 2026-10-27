@@ -20,7 +20,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : AppCompatActivity() {
     private lateinit var preview: PreviewView
-    private lateinit var web: WebView
+    lateinit var web: WebView
 
     private val permLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { onPerms() }
@@ -124,6 +124,10 @@ class MainActivity : AppCompatActivity() {
         }
         val s = RecorderService.instance
         if (s == null) RecorderService.start(this) else s.startRecording()
+    }
+
+    fun evalJs(js: String) {
+        web.evaluateJavascript(js, null)
     }
 
     fun setPreview(l: Double, t: Double, w: Double, h: Double) {
