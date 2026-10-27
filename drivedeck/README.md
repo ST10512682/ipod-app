@@ -1,21 +1,36 @@
 # DriveDeck (Android)
 
-A dash cam and music player in one app, styled like a 1970s/80s car stereo. Android only.
-
-- **Dash cam:** loop recording in short clips (1, 3 or 5 minutes), oldest clips are deleted when your storage cap is reached.
-- **Impact lock:** the phone's motion sensor locks the current clip (and the one before it) when it detects a hard impact. A LOCK button does the same by hand. Locked clips are never auto-deleted.
-- **Live camera** shows in the cassette window while the music plays.
-- **Music:** plays songs stored on the phone, with an amber spectrum display, an analog-style dial that tracks the song, 6 presets (hold a preset to store the current song), and a volume knob.
-- **Backlight colours:** amber, green, ice, red.
+A dash cam, music player and internet radio in one app, styled like a 2000s car stereo. Android only.
 
 ## Screenshots
 
 <table>
-<tr><td align="center"><img src="docs/01-main.png" width="420"><br><sub>Main screen: amber display, spectrum, live camera window</sub></td><td align="center"><img src="docs/03-clips.png" width="420"><br><sub>Clips list</sub></td></tr>
-<tr><td align="center"><img src="docs/04-settings.png" width="420"><br><sub>Settings</sub></td><td align="center"><img src="docs/05-green.png" width="420"><br><sub>Green backlight</sub></td></tr>
+<tr>
+<td align="center"><img src="docs/main.png" width="420"><br><sub>Main screen: live camera window, spectrum, glowing knob</sub></td>
+<td align="center"><img src="docs/wave.png" width="420"><br><sub>Dot-matrix "wave" visual</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/ripple.png" width="420"><br><sub>"Ripple" visual</sub></td>
+<td align="center"><img src="docs/radio.png" width="420"><br><sub>Radio mode with tuner dial</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/stations.png" width="420"><br><sub>Station browser</sub></td>
+<td align="center"><img src="docs/clips.png" width="420"><br><sub>Clips list</sub></td>
+</tr>
 </table>
 
 <sub>Rendered in a browser with sample data. The camera window shows a placeholder here.</sub>
+
+## Features
+
+- **Dash cam:** loop recording in short clips (1, 3 or 5 minutes). The oldest unlocked clips are deleted when your storage cap is reached.
+- **Impact lock:** the motion sensor locks the current clip and the one before it when it feels a hard impact. A LOCK button does the same by hand. Locked clips are never auto-deleted. The display flashes "IMPACT LOCKED" in red.
+- **Live camera** shows in the cassette window while music or radio plays.
+- **Animated dot-matrix display:** tap the display to switch between LED bars, wave, ripple, rain and tunnel visuals, or leave it on AUTO. The visuals react to the music. The display also scans on at start-up and shows static while tuning.
+- **Glowing volume knob** that pulses with the bass, and green preset lights.
+- **Music:** plays songs stored on the phone. 6 presets (hold a preset to store the current song).
+- **Internet radio:** press **MUSIC/RADIO** to switch source. Browse stations (top, South Africa, jazz, rock, pop, talk), search by name, add your own stream link, and star favourites. Prev/Next step through your favourites, and presets store stations in radio mode. A tuner dial needle sweeps to each station.
+- **Backlight colours:** cyan, blue, amber, green, ice, red.
 
 ## Install
 
@@ -23,6 +38,7 @@ Download `drivedeck.apk` from the **Releases** page (tags starting with `dd-v`),
 
 ## Notes
 
+- **Radio is internet radio** and needs mobile data. Station listings come from the free community directory [radio-browser.info](https://www.radio-browser.info/). Real FM/AM broadcasts are not available to apps on most phones.
 - The phone must be firmly mounted. It is illegal in many places, including South Africa, to hold a phone while driving. Start recording before you drive.
 - Recording keeps going if you switch apps or turn the screen off (Android shows a notification while it records).
 - Microphone recording is **off** by default. If you turn it on, tell your passengers.
